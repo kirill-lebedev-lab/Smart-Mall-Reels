@@ -15,13 +15,13 @@ OUTPUT_HEIGHT = 1920
 
 # Motion tuning.
 # Do not stretch the source image. Scale to cover the vertical frame, then crop.
-ZOOM_START = 1.065
-PULL_BACK_AMOUNT = 0.045
+# Match the final camera of scene 006 exactly, then move into the route reveal.
+ZOOM_START = 1.02
 ROUTE_PUSH_AMOUNT = 0.018
-VIEWPORT_X_START = 690.0
+VIEWPORT_X_START = 735.0
 ATTENTION_DRIFT = 210.0
-ROUTE_FOLLOW_DRIFT = 380.0
-VIEWPORT_Y_FOCUS_START = 0.45
+ROUTE_FOLLOW_DRIFT = 335.0
+VIEWPORT_Y_FOCUS_START = 0.5
 VIEWPORT_Y_FOCUS_END = 0.95
 
 # Encoding settings.
@@ -51,11 +51,10 @@ def phase_value(progress: float, start: float, end: float) -> float:
 
 def interpolate_camera(progress: float) -> tuple[float, float, float]:
     """Return a continuous camera path without internal stops."""
-    pull_back = phase_value(progress, 0.0, 0.48)
     attention = phase_value(progress, 0.22, 0.72)
     route_follow = phase_value(progress, 0.52, 1.0)
 
-    zoom = ZOOM_START - PULL_BACK_AMOUNT * pull_back + ROUTE_PUSH_AMOUNT * route_follow
+    zoom = ZOOM_START + ROUTE_PUSH_AMOUNT * route_follow
     x = VIEWPORT_X_START + ATTENTION_DRIFT * attention + ROUTE_FOLLOW_DRIFT * route_follow
     y_focus = VIEWPORT_Y_FOCUS_START + (
         VIEWPORT_Y_FOCUS_END - VIEWPORT_Y_FOCUS_START
