@@ -8,7 +8,7 @@ from PIL import Image
 
 
 # Scene timing and output format.
-DURATION = 12.0
+DURATION = 4.4
 FPS = 30
 OUTPUT_WIDTH = 1080
 OUTPUT_HEIGHT = 1920
@@ -17,21 +17,21 @@ OUTPUT_HEIGHT = 1920
 # Do not stretch the source image. Scale to cover the vertical frame, then crop.
 FOCUS_END = 2.5
 PAUSE_END = 3.0
+APPROACH_DURATION = 3.0
 
 ZOOM_START = 1.0
 ZOOM_AFTER_FOCUS = 1.035
 APPROACH_ZOOM_AMOUNT = 0.44
-ASCENT_ZOOM_AMOUNT = 0.04
+APPROACH_LIFT_ZOOM_AMOUNT = 0.04
 
 SOURCE_X_START = 705.0
 SOURCE_X_AFTER_FOCUS = 730.0
-APPROACH_X_DRIFT = -270.0
-ASCENT_X_DRIFT = 250.0
+APPROACH_X_DRIFT = -150.0
 
 VIEWPORT_Y_FOCUS_START = 0.82
 VIEWPORT_Y_FOCUS_AFTER_FOCUS = 0.76
 APPROACH_Y_DRIFT = -0.02
-ASCENT_Y_DRIFT = -0.66
+APPROACH_LIFT_Y_DRIFT = -0.12
 
 # Encoding settings.
 VIDEO_CODEC = "libx264"
@@ -64,33 +64,29 @@ def phase_value(time: float, start: float, end: float) -> float:
 
 
 def interpolate_camera(progress: float) -> tuple[float, float, float]:
-    """Return orientation, pause, then one continuous route into the escalator."""
+    """Return orientation, pause, then a short move toward the escalator."""
     time = progress * DURATION
     focus = phase_value(time, 0.0, FOCUS_END)
-    route_progress = clamp((time - PAUSE_END) / (DURATION - PAUSE_END))
-
-    # The ascent starts before the approach is finished, so the camera enters the
-    # escalator trajectory as one continuous spatial movement.
+    route_progress = clamp((time - PAUSE_END) / APPROACH_DURATION)
     escalator_approach = smoothstep(route_progress)
-    escalator_ascent = smoothstep(clamp((route_progress - 0.42) / 0.58))
+    approach_lift = smoothstep(clamp((route_progress - 0.35) / 0.65))
 
     zoom = (
         ZOOM_START
         + (ZOOM_AFTER_FOCUS - ZOOM_START) * focus
         + APPROACH_ZOOM_AMOUNT * escalator_approach
-        + ASCENT_ZOOM_AMOUNT * escalator_ascent
+        + APPROACH_LIFT_ZOOM_AMOUNT * approach_lift
     )
     source_x = (
         SOURCE_X_START
         + (SOURCE_X_AFTER_FOCUS - SOURCE_X_START) * focus
         + APPROACH_X_DRIFT * escalator_approach
-        + ASCENT_X_DRIFT * escalator_ascent
     )
     y_focus = (
         VIEWPORT_Y_FOCUS_START
         + (VIEWPORT_Y_FOCUS_AFTER_FOCUS - VIEWPORT_Y_FOCUS_START) * focus
         + APPROACH_Y_DRIFT * escalator_approach
-        + ASCENT_Y_DRIFT * escalator_ascent
+        + APPROACH_LIFT_Y_DRIFT * approach_lift
     )
     return zoom, source_x, y_focus
 

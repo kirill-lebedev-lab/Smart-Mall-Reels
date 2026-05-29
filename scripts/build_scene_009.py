@@ -8,13 +8,17 @@ from PIL import Image
 
 
 # Scene timing and output format.
-DURATION = 8.0
+DURATION = 6.27
 FPS = 30
 OUTPUT_WIDTH = 1080
 OUTPUT_HEIGHT = 1920
 
 # Motion tuning.
 # Do not stretch the source image. Scale to cover the vertical frame, then crop.
+ORIGINAL_DURATION = 8.0
+ORIGINAL_UPWARD_END = 5.2
+UPWARD_END = ORIGINAL_UPWARD_END * 2 / 3
+
 ZOOM_START = 1.0
 FORWARD_AMOUNT = 0.19
 RIGHT_FORWARD_AMOUNT = 0.015
@@ -55,8 +59,13 @@ def phase_value(time: float, start: float, end: float) -> float:
 def interpolate_camera(progress: float) -> tuple[float, float, float]:
     """Continue ascending while the route gently bends toward Cinema."""
     time = progress * DURATION
-    upward = smoothstep(progress)
-    right = phase_value(time, RIGHT_START, DURATION)
+    if time <= UPWARD_END:
+        camera_time = time * ORIGINAL_UPWARD_END / UPWARD_END
+    else:
+        camera_time = time + (ORIGINAL_UPWARD_END - UPWARD_END)
+
+    upward = phase_value(camera_time, 0.0, ORIGINAL_UPWARD_END)
+    right = phase_value(camera_time, RIGHT_START, ORIGINAL_DURATION)
 
     zoom = ZOOM_START + FORWARD_AMOUNT * upward + RIGHT_FORWARD_AMOUNT * right
     source_center_x = (

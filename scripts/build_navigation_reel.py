@@ -53,8 +53,8 @@ CAPTIONS = [
     },
     {
         "text": "Smart Mall",
-        "start": 41.4,
-        "end": 45.1,
+        "start": 32.1,
+        "end": 35.8,
         "font_size": 104,
         "x": "(w-text_w)/2",
         "y": "h*0.382",
@@ -63,8 +63,8 @@ CAPTIONS = [
     },
     {
         "text": "Space that responds to people",
-        "start": 41.75,
-        "end": 45.1,
+        "start": 32.45,
+        "end": 35.8,
         "font_size": 56,
         "x": "(w-text_w)/2",
         "y": "h*0.462",
