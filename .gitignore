@@ -1,0 +1,43 @@
+# macOS metadata
+.DS_Store
+._*
+
+# Python cache and local environments
+__pycache__/
+*.py[cod]
+.python-version
+.venv/
+venv/
+env/
+
+# Generated videos and image assets
+images/
+scenes/
+output/
+*.mp4
+*.mov
+*.m4v
+*.avi
+*.mkv
+*.webm
+*.png
+*.jpg
+*.jpeg
+*.webp
+*.tif
+*.tiff
+
+# Temporary and helper files
+tmp/
+temp/
+.tmp/
+*.tmp
+*.log
+*.bak
+*.swp
+
+# Keep empty project directories if .gitkeep files are added later.
+!images/.gitkeep
+!images/navigation/.gitkeep
+!scenes/.gitkeep
+!output/.gitkeep
