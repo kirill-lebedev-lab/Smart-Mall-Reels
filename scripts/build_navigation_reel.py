@@ -9,6 +9,7 @@ SCENES = [
     "scenes/scene_001.mp4",
     "scenes/scene_002.mp4",
     "scenes/scene_003.mp4",
+    "scenes/scene_004.mp4",
 ]
 OUTPUT_PATH = "output/mall_navigation_reel_v01.mp4"
 
