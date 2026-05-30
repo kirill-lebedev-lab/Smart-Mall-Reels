@@ -27,6 +27,15 @@ output/
 *.tif
 *.tiff
 
+# Local audio files
+audio/
+*.mp3
+*.wav
+*.aac
+*.m4a
+*.flac
+*.ogg
+
 # Temporary and helper files
 tmp/
 temp/

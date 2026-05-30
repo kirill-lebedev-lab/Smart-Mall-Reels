@@ -18,6 +18,7 @@ SCENES = [
 ]
 OUTPUT_PATH = "output/mall_navigation_reel_v01.mp4"
 NO_TEXT_OUTPUT_PATH = "output/mall_navigation_reel_v01_no_text.mp4"
+MUSIC_PATH = "audio/Glass Atrium Drift.mp3"
 
 # Video and transition settings.
 FPS = 30
@@ -28,6 +29,13 @@ VIDEO_CODEC = "libx264"
 PIXEL_FORMAT = "yuv420p"
 CRF = "18"
 PRESET = "slow"
+
+# Background music settings.
+MUSIC_VOLUME = 0.52
+MUSIC_FADE_IN = 1.0
+MUSIC_FADE_OUT = 1.75
+AUDIO_CODEC = "aac"
+AUDIO_BITRATE = "192k"
 
 # Caption settings.
 FONT_FILE = "/System/Library/Fonts/Avenir.ttc"
@@ -85,6 +93,11 @@ def check_input_scenes(scene_paths: list[Path]) -> None:
     if missing:
         missing_list = "\n".join(f"- {path}" for path in missing)
         raise FileNotFoundError(f"Missing input scene(s):\n{missing_list}")
+
+
+def check_music_file(music_path: Path) -> None:
+    if not music_path.exists():
+        raise FileNotFoundError(f"Missing background music file: {music_path}")
 
 
 def probe_duration(path: Path) -> float:
@@ -227,16 +240,36 @@ def build_caption_filter() -> str:
     return ";".join(filters)
 
 
-def build_caption_command(input_path: Path, output_path: Path) -> list[str]:
+def build_caption_command(
+    input_path: Path, music_path: Path, output_path: Path
+) -> list[str]:
+    video_duration = probe_duration(input_path)
+    fade_out_duration = min(MUSIC_FADE_OUT, video_duration)
+    fade_out_start = max(0.0, video_duration - fade_out_duration)
+    audio_filter = (
+        f"[1:a]"
+        f"atrim=duration={video_duration:.3f},"
+        f"asetpts=PTS-STARTPTS,"
+        f"volume={MUSIC_VOLUME:.2f},"
+        f"afade=t=in:st=0:d={MUSIC_FADE_IN:.3f},"
+        f"afade=t=out:st={fade_out_start:.3f}:d={fade_out_duration:.3f}"
+        f"[aout]"
+    )
     return [
         "ffmpeg",
         "-y",
         "-i",
         str(input_path),
+        "-stream_loop",
+        "-1",
+        "-i",
+        str(music_path),
         "-filter_complex",
-        build_caption_filter(),
+        f"{build_caption_filter()};{audio_filter}",
         "-map",
         "[vout]",
+        "-map",
+        "[aout]",
         "-r",
         str(FPS),
         "-c:v",
@@ -247,6 +280,10 @@ def build_caption_command(input_path: Path, output_path: Path) -> list[str]:
         CRF,
         "-pix_fmt",
         PIXEL_FORMAT,
+        "-c:a",
+        AUDIO_CODEC,
+        "-b:a",
+        AUDIO_BITRATE,
         str(output_path),
     ]
 
@@ -255,9 +292,11 @@ def main() -> int:
     scene_paths = [project_path(path) for path in SCENES]
     output_path = project_path(OUTPUT_PATH)
     no_text_output_path = project_path(NO_TEXT_OUTPUT_PATH)
+    music_path = project_path(MUSIC_PATH)
 
     try:
         check_input_scenes(scene_paths)
+        check_music_file(music_path)
     except FileNotFoundError as error:
         print(error, file=sys.stderr)
         return 1
@@ -268,7 +307,7 @@ def main() -> int:
     try:
         reel_command = build_ffmpeg_command(scene_paths, no_text_output_path)
         subprocess.run(reel_command, check=True)
-        caption_command = build_caption_command(no_text_output_path, output_path)
+        caption_command = build_caption_command(no_text_output_path, music_path, output_path)
         subprocess.run(caption_command, check=True)
     except FileNotFoundError:
         print("ffmpeg or ffprobe was not found. Please install ffmpeg and try again.", file=sys.stderr)
