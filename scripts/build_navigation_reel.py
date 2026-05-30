@@ -38,7 +38,7 @@ AUDIO_CODEC = "aac"
 AUDIO_BITRATE = "192k"
 
 # Caption settings.
-FONT_FILE = "/System/Library/Fonts/Avenir.ttc"
+FONT_FAMILY = "Avenir Next Medium"
 TEXT_COLOR = "0xFFF6DC"
 SHADOW_COLOR = "0x000000"
 CAPTION_FADE = 0.65
@@ -46,8 +46,8 @@ CAPTIONS = [
     {
         "text": "The mall notices you",
         "start": 1.2,
-        "end": 4.2,
-        "font_size": 62,
+        "end": 5.0,
+        "font_size": 74,
         "x": "(w-text_w)/2",
         "y": "h*0.815",
     },
@@ -55,29 +55,29 @@ CAPTIONS = [
         "text": "Space begins to respond",
         "start": 11.2,
         "end": 14.2,
-        "font_size": 58,
+        "font_size": 70,
         "x": "(w-text_w)/2",
         "y": "h*0.815",
     },
     {
         "text": "Smart Mall",
         "start": 32.1,
-        "end": 35.8,
-        "font_size": 104,
+        "end": 36.2,
+        "font_size": 122,
         "x": "(w-text_w)/2",
         "y": "h*0.382",
-        "border_width": 3,
-        "shadow_opacity": 0.56,
+        "border_width": 2,
+        "fade_out": False,
     },
     {
         "text": "Space that responds to people",
         "start": 32.45,
-        "end": 35.8,
-        "font_size": 56,
+        "end": 36.2,
+        "font_size": 66,
         "x": "(w-text_w)/2",
         "y": "h*0.462",
-        "border_width": 3,
-        "shadow_opacity": 0.56,
+        "border_width": 2,
+        "fade_out": False,
     },
 ]
 
@@ -194,14 +194,20 @@ def escape_drawtext_expression(expression: str) -> str:
     return expression.replace(",", "\\,")
 
 
-def caption_alpha_expression(start: float, end: float) -> str:
+def caption_alpha_expression(start: float, end: float, fade_out: bool = True) -> str:
     fade = CAPTION_FADE
-    expression = (
-        f"if(lt(t,{start:.3f}),0,"
-        f"if(lt(t,{start + fade:.3f}),(t-{start:.3f})/{fade:.3f},"
-        f"if(lt(t,{end - fade:.3f}),0.92,"
-        f"if(lt(t,{end:.3f}),0.92*(1-(t-{end - fade:.3f})/{fade:.3f}),0))))"
-    )
+    if fade_out:
+        expression = (
+            f"if(lt(t,{start:.3f}),0,"
+            f"if(lt(t,{start + fade:.3f}),(t-{start:.3f})/{fade:.3f},"
+            f"if(lt(t,{end - fade:.3f}),0.92,"
+            f"if(lt(t,{end:.3f}),0.92*(1-(t-{end - fade:.3f})/{fade:.3f}),0))))"
+        )
+    else:
+        expression = (
+            f"if(lt(t,{start:.3f}),0,"
+            f"if(lt(t,{start + fade:.3f}),(t-{start:.3f})/{fade:.3f},0.92))"
+        )
     return escape_drawtext_expression(expression)
 
 
@@ -212,23 +218,26 @@ def build_caption_filter() -> str:
         input_label = f"cap{index}"
         output_label = "vout" if index == len(CAPTIONS) - 1 else f"cap{index + 1}"
         text = escape_drawtext_text(caption["text"])
-        alpha = caption_alpha_expression(caption["start"], caption["end"])
-        border_width = caption.get("border_width", 2)
-        shadow_opacity = caption.get("shadow_opacity", 0.48)
+        alpha = caption_alpha_expression(
+            caption["start"], caption["end"], caption.get("fade_out", True)
+        )
+        border_width = caption.get("border_width", 1)
+        border_opacity = caption.get("border_opacity", 0.22)
+        shadow_opacity = caption.get("shadow_opacity", 0.42)
         enable = escape_drawtext_expression(
             f"between(t,{caption['start']:.3f},{caption['end']:.3f})"
         )
         filters.append(
             f"[{input_label}]"
             f"drawtext="
-            f"fontfile='{FONT_FILE}':"
+            f"font='{FONT_FAMILY}':"
             f"text='{text}':"
             f"fontsize={caption['font_size']}:"
             f"fontcolor={TEXT_COLOR}:"
             f"alpha='{alpha}':"
             f"x={caption['x']}:"
             f"y={caption['y']}:"
-            f"bordercolor={SHADOW_COLOR}@0.32:"
+            f"bordercolor={SHADOW_COLOR}@{border_opacity}:"
             f"borderw={border_width}:"
             f"shadowcolor={SHADOW_COLOR}@{shadow_opacity}:"
             f"shadowx=0:"
