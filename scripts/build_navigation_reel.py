@@ -53,8 +53,8 @@ CAPTIONS = [
     },
     {
         "text": "Space begins to respond",
-        "start": 11.2,
-        "end": 14.2,
+        "start": 9.0,
+        "end": 12.0,
         "font_size": 70,
         "x": "(w-text_w)/2",
         "y": "h*0.815",
