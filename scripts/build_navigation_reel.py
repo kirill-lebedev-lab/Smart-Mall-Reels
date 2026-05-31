@@ -17,6 +17,7 @@ SCENES = [
     "scenes/scene_009.mp4",
 ]
 OUTPUT_PATH = "output/mall_navigation_reel_v01.mp4"
+RUSSIAN_OUTPUT_PATH = "output/mall_navigation_reel_rus_v01.mp4"
 NO_TEXT_OUTPUT_PATH = "output/mall_navigation_reel_v01_no_text.mp4"
 MUSIC_PATH = "audio/Glass Atrium Drift.mp3"
 
@@ -79,6 +80,14 @@ CAPTIONS = [
         "border_width": 2,
         "fade_out": False,
     },
+]
+RUSSIAN_CAPTIONS = [
+    {**CAPTIONS[0], "text": "Молл замечает вас"},
+    {**CAPTIONS[1], "text": "Пространство начинает", "y": "h*0.775"},
+    {**CAPTIONS[1], "text": "реагировать", "y": "h*0.825"},
+    {**CAPTIONS[2], "text": "Умный молл"},
+    {**CAPTIONS[3], "text": "Пространство, которое", "y": "h*0.455"},
+    {**CAPTIONS[3], "text": "реагирует на людей", "y": "h*0.500"},
 ]
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
@@ -211,12 +220,12 @@ def caption_alpha_expression(start: float, end: float, fade_out: bool = True) ->
     return escape_drawtext_expression(expression)
 
 
-def build_caption_filter() -> str:
+def build_caption_filter(captions: list[dict]) -> str:
     filters = ["[0:v]null[cap0]"]
 
-    for index, caption in enumerate(CAPTIONS):
+    for index, caption in enumerate(captions):
         input_label = f"cap{index}"
-        output_label = "vout" if index == len(CAPTIONS) - 1 else f"cap{index + 1}"
+        output_label = "vout" if index == len(captions) - 1 else f"cap{index + 1}"
         text = escape_drawtext_text(caption["text"])
         alpha = caption_alpha_expression(
             caption["start"], caption["end"], caption.get("fade_out", True)
@@ -250,7 +259,7 @@ def build_caption_filter() -> str:
 
 
 def build_caption_command(
-    input_path: Path, music_path: Path, output_path: Path
+    input_path: Path, music_path: Path, output_path: Path, captions: list[dict]
 ) -> list[str]:
     video_duration = probe_duration(input_path)
     fade_out_duration = min(MUSIC_FADE_OUT, video_duration)
@@ -274,7 +283,7 @@ def build_caption_command(
         "-i",
         str(music_path),
         "-filter_complex",
-        f"{build_caption_filter()};{audio_filter}",
+        f"{build_caption_filter(captions)};{audio_filter}",
         "-map",
         "[vout]",
         "-map",
@@ -300,6 +309,7 @@ def build_caption_command(
 def main() -> int:
     scene_paths = [project_path(path) for path in SCENES]
     output_path = project_path(OUTPUT_PATH)
+    russian_output_path = project_path(RUSSIAN_OUTPUT_PATH)
     no_text_output_path = project_path(NO_TEXT_OUTPUT_PATH)
     music_path = project_path(MUSIC_PATH)
 
@@ -316,8 +326,14 @@ def main() -> int:
     try:
         reel_command = build_ffmpeg_command(scene_paths, no_text_output_path)
         subprocess.run(reel_command, check=True)
-        caption_command = build_caption_command(no_text_output_path, music_path, output_path)
+        caption_command = build_caption_command(
+            no_text_output_path, music_path, output_path, CAPTIONS
+        )
         subprocess.run(caption_command, check=True)
+        russian_caption_command = build_caption_command(
+            no_text_output_path, music_path, russian_output_path, RUSSIAN_CAPTIONS
+        )
+        subprocess.run(russian_caption_command, check=True)
     except FileNotFoundError:
         print("ffmpeg or ffprobe was not found. Please install ffmpeg and try again.", file=sys.stderr)
         return 2
@@ -326,6 +342,7 @@ def main() -> int:
         return error.returncode
 
     print(f"Reel created: {output_path.resolve()}")
+    print(f"Russian reel created: {russian_output_path.resolve()}")
     return 0
 
 
