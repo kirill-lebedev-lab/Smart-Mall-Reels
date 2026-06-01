@@ -3,6 +3,8 @@ import subprocess
 import sys
 from pathlib import Path
 
+from build_thumbnail import generate_thumbnails, prepend_thumbnail
+
 
 # Reel inputs and output.
 SCENES = [
@@ -334,9 +336,32 @@ def main() -> int:
             no_text_output_path, music_path, russian_output_path, RUSSIAN_CAPTIONS
         )
         subprocess.run(russian_caption_command, check=True)
-    except FileNotFoundError:
-        print("ffmpeg or ffprobe was not found. Please install ffmpeg and try again.", file=sys.stderr)
-        return 2
+        thumbnail_paths = generate_thumbnails()
+        prepend_thumbnail(
+            output_path,
+            thumbnail_paths["en"],
+            music_path,
+            MUSIC_VOLUME,
+            MUSIC_FADE_IN,
+            MUSIC_FADE_OUT,
+        )
+        prepend_thumbnail(
+            russian_output_path,
+            thumbnail_paths["ru"],
+            music_path,
+            MUSIC_VOLUME,
+            MUSIC_FADE_IN,
+            MUSIC_FADE_OUT,
+        )
+    except FileNotFoundError as error:
+        if error.filename in {"ffmpeg", "ffprobe"}:
+            print(
+                "ffmpeg or ffprobe was not found. Please install ffmpeg and try again.",
+                file=sys.stderr,
+            )
+            return 2
+        print(error, file=sys.stderr)
+        return 1
     except subprocess.CalledProcessError as error:
         print(f"ffmpeg failed with exit code {error.returncode}.", file=sys.stderr)
         return error.returncode
