@@ -3,7 +3,8 @@ import subprocess
 import sys
 from pathlib import Path
 
-from build_thumbnail import generate_thumbnails, prepend_thumbnail
+from build_thumbnail import prepend_thumbnail
+from generate_thumbnails import generate_thumbnails
 
 
 # Reel inputs and output.
