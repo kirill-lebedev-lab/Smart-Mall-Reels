@@ -10,68 +10,69 @@ from camera.camera_state import CameraState
 from camera.linear_camera_path import LinearCameraPath
 from ffmpeg.encode_video_command import EncodeVideoCommand
 from ffmpeg.ffmpeg_video_output import FfmpegVideoOutput
+from scene.scene import Scene
 from video.frame_settings import FrameSettings
 from video.video_settings import VideoSettings
 
 
-# Scene timing and output format.
-DURATION = 4.0
-FPS = 30
-OUTPUT_WIDTH = 1080
-OUTPUT_HEIGHT = 1920
+PROJECT_ROOT = Path(__file__).resolve().parents[1]
+DEFAULT_OUTPUT = PROJECT_ROOT / "scenes" / "scene_001.mp4"
 
-# Motion tuning.
-# The source is scaled proportionally first, then a 1080x1920 viewport is cropped from it.
-# This keeps the mall geometry intact and avoids squeezing the horizontal image into 9:16.
-ZOOM_START = 1.0
-ZOOM_END = 1.13
-BASE_SCALE_HEIGHT = OUTPUT_HEIGHT
-VIEWPORT_X_START = 760
-VIEWPORT_X_END = 1100
-VIEWPORT_Y_FOCUS = 0.48
-
-CAMERA_PATH = LinearCameraPath(
-    start=CameraState(
-        zoom=ZOOM_START,
-        x=VIEWPORT_X_START,
-        y_focus=VIEWPORT_Y_FOCUS,
+SCENE = Scene(
+    source_path=PROJECT_ROOT / "images" / "navigation" / "001-001.png",
+    duration=4.0,
+    camera_path=LinearCameraPath(
+        start=CameraState(
+            zoom=1.0,
+            x=760.0,
+            y_focus=0.48,
+        ),
+        end=CameraState(
+            zoom=1.13,
+            x=1100.0,
+            y_focus=0.48,
+        ),
     ),
-    end=CameraState(
-        zoom=ZOOM_END,
-        x=VIEWPORT_X_END,
-        y_focus=VIEWPORT_Y_FOCUS,
+    video_settings=VideoSettings(
+        frame=FrameSettings(
+            width=1080,
+            height=1920,
+        ),
+        fps=30,
+        codec="libx264",
+        preset="slow",
+        crf="18",
+        pixel_format="yuv420p",
     ),
 )
 
-# Encoding settings.
-VIDEO_CODEC = "libx264"
-PIXEL_FORMAT = "yuv420p"
-CRF = "18"
-PRESET = "slow"
-
-PROJECT_ROOT = Path(__file__).resolve().parents[1]
-DEFAULT_INPUT = PROJECT_ROOT / "images" / "navigation" / "001-001.png"
-DEFAULT_OUTPUT = PROJECT_ROOT / "scenes" / "scene_001.mp4"
-
 
 def frame_count() -> int:
-    return int(round(DURATION * FPS))
+    return int(round(SCENE.duration * SCENE.video_settings.fps))
 
 
 def render_frame(source: Image.Image, index: int, total_frames: int) -> Image.Image:
     """Render one undistorted 9:16 frame from the horizontal source image."""
-    camera = CAMERA_PATH.state_at(index, total_frames)
+    frame_settings = SCENE.video_settings.frame
+    camera = SCENE.camera_path.state_at(index, total_frames)
 
-    scaled_height = round(BASE_SCALE_HEIGHT * camera.zoom)
+    scaled_height = round(frame_settings.height * camera.zoom)
     scaled_width = round(source.width * scaled_height / source.height)
     scaled = source.resize((scaled_width, scaled_height), Image.Resampling.LANCZOS)
 
     x = round(camera.x)
-    y = round((scaled_height - OUTPUT_HEIGHT) * camera.y_focus)
-    x = max(0, min(x, scaled_width - OUTPUT_WIDTH))
-    y = max(0, min(y, scaled_height - OUTPUT_HEIGHT))
+    y = round((scaled_height - frame_settings.height) * camera.y_focus)
+    x = max(0, min(x, scaled_width - frame_settings.width))
+    y = max(0, min(y, scaled_height - frame_settings.height))
 
-    return scaled.crop((x, y, x + OUTPUT_WIDTH, y + OUTPUT_HEIGHT))
+    return scaled.crop(
+        (
+            x,
+            y,
+            x + frame_settings.width,
+            y + frame_settings.height,
+        )
+    )
 
 
 def render_frames(source: Image.Image, total_frames: int):
@@ -82,18 +83,10 @@ def render_frames(source: Image.Image, total_frames: int):
 def render_video(input_path: Path, output_path: Path) -> None:
     total_frames = frame_count()
     source = Image.open(input_path).convert("RGB")
-    video_settings = VideoSettings(
-        frame=FrameSettings(width=OUTPUT_WIDTH, height=OUTPUT_HEIGHT),
-        fps=FPS,
-        codec=VIDEO_CODEC,
-        preset=PRESET,
-        crf=CRF,
-        pixel_format=PIXEL_FORMAT,
-    )
     command = EncodeVideoCommand(
         output_path=output_path,
         frame_count=total_frames,
-        video_settings=video_settings,
+        video_settings=SCENE.video_settings,
     )
 
     with FfmpegVideoOutput(command) as output:
@@ -109,7 +102,7 @@ def parse_args() -> argparse.Namespace:
         "--input",
         "-i",
         type=Path,
-        default=DEFAULT_INPUT,
+        default=SCENE.source_path,
         help="Path to the source image.",
     )
     parser.add_argument(
