@@ -3,7 +3,8 @@ import subprocess
 import sys
 from pathlib import Path
 
-from build_thumbnail import prepend_thumbnail
+from ffmpeg.assemble_reel_command import AssembleReelCommand
+from ffmpeg.compose_final_reel_command import ComposeFinalReelCommand
 from generate_thumbnails import generate_thumbnails
 
 
@@ -29,6 +30,8 @@ FPS = 30
 OUTPUT_WIDTH = 1080
 OUTPUT_HEIGHT = 1920
 TRANSITION_DURATION = 0.5
+THUMBNAIL_DURATION = 1.5
+DISSOLVE_DURATION = 0.65
 VIDEO_CODEC = "libx264"
 PIXEL_FORMAT = "yuv420p"
 CRF = "18"
@@ -164,35 +167,6 @@ def build_filtergraph(scene_count: int, durations: list[float]) -> str:
     return ";".join(filters)
 
 
-def build_ffmpeg_command(scene_paths: list[Path], output_path: Path) -> list[str]:
-    durations = [probe_duration(path) for path in scene_paths]
-
-    command = ["ffmpeg", "-y"]
-    for path in scene_paths:
-        command.extend(["-i", str(path)])
-
-    command.extend(
-        [
-            "-filter_complex",
-            build_filtergraph(len(scene_paths), durations),
-            "-map",
-            "[vout]",
-            "-r",
-            str(FPS),
-            "-c:v",
-            VIDEO_CODEC,
-            "-preset",
-            PRESET,
-            "-crf",
-            CRF,
-            "-pix_fmt",
-            PIXEL_FORMAT,
-            str(output_path),
-        ]
-    )
-    return command
-
-
 def escape_drawtext_text(text: str) -> str:
     return (
         text.replace("\\", "\\\\")
@@ -224,11 +198,18 @@ def caption_alpha_expression(start: float, end: float, fade_out: bool = True) ->
 
 
 def build_caption_filter(captions: list[dict]) -> str:
-    filters = ["[0:v]null[cap0]"]
+    if not captions:
+        return "[reel]null[captioned_reel]"
+
+    filters = ["[reel]null[cap0]"]
 
     for index, caption in enumerate(captions):
         input_label = f"cap{index}"
-        output_label = "vout" if index == len(captions) - 1 else f"cap{index + 1}"
+        output_label = (
+            "captioned_reel"
+            if index == len(captions) - 1
+            else f"cap{index + 1}"
+        )
         text = escape_drawtext_text(caption["text"])
         alpha = caption_alpha_expression(
             caption["start"], caption["end"], caption.get("fade_out", True)
@@ -261,52 +242,37 @@ def build_caption_filter(captions: list[dict]) -> str:
     return ";".join(filters)
 
 
-def build_caption_command(
-    input_path: Path, music_path: Path, output_path: Path, captions: list[dict]
-) -> list[str]:
-    video_duration = probe_duration(input_path)
-    fade_out_duration = min(MUSIC_FADE_OUT, video_duration)
-    fade_out_start = max(0.0, video_duration - fade_out_duration)
+def build_final_reel_filtergraph(
+    assembled_reel_duration: float,
+    captions: list[dict],
+) -> str:
+    total_duration = (
+        THUMBNAIL_DURATION + assembled_reel_duration - DISSOLVE_DURATION
+    )
+    dissolve_offset = THUMBNAIL_DURATION - DISSOLVE_DURATION
+    fade_out_duration = min(MUSIC_FADE_OUT, total_duration)
+    fade_out_start = max(0.0, total_duration - fade_out_duration)
+
+    video_filters = (
+        f"[0:v]fps={FPS},scale={OUTPUT_WIDTH}:{OUTPUT_HEIGHT},"
+        f"setsar=1,trim=duration={THUMBNAIL_DURATION:.3f},"
+        f"setpts=PTS-STARTPTS[cover];"
+        f"[1:v]fps={FPS},scale={OUTPUT_WIDTH}:{OUTPUT_HEIGHT},"
+        f"setsar=1,setpts=PTS-STARTPTS[reel];"
+        f"{build_caption_filter(captions)};"
+        f"[cover][captioned_reel]xfade=transition=fade:"
+        f"duration={DISSOLVE_DURATION:.3f}:"
+        f"offset={dissolve_offset:.3f}[vout]"
+    )
     audio_filter = (
-        f"[1:a]"
-        f"atrim=duration={video_duration:.3f},"
+        f"[2:a]atrim=duration={total_duration:.3f},"
         f"asetpts=PTS-STARTPTS,"
         f"volume={MUSIC_VOLUME:.2f},"
         f"afade=t=in:st=0:d={MUSIC_FADE_IN:.3f},"
         f"afade=t=out:st={fade_out_start:.3f}:d={fade_out_duration:.3f}"
         f"[aout]"
     )
-    return [
-        "ffmpeg",
-        "-y",
-        "-i",
-        str(input_path),
-        "-stream_loop",
-        "-1",
-        "-i",
-        str(music_path),
-        "-filter_complex",
-        f"{build_caption_filter(captions)};{audio_filter}",
-        "-map",
-        "[vout]",
-        "-map",
-        "[aout]",
-        "-r",
-        str(FPS),
-        "-c:v",
-        VIDEO_CODEC,
-        "-preset",
-        PRESET,
-        "-crf",
-        CRF,
-        "-pix_fmt",
-        PIXEL_FORMAT,
-        "-c:a",
-        AUDIO_CODEC,
-        "-b:a",
-        AUDIO_BITRATE,
-        str(output_path),
-    ]
+    return f"{video_filters};{audio_filter}"
 
 
 def main() -> int:
@@ -327,33 +293,63 @@ def main() -> int:
 
     print("Running ffmpeg...")
     try:
-        reel_command = build_ffmpeg_command(scene_paths, no_text_output_path)
-        subprocess.run(reel_command, check=True)
-        caption_command = build_caption_command(
-            no_text_output_path, music_path, output_path, CAPTIONS
+        scene_durations = [probe_duration(path) for path in scene_paths]
+        filtergraph = build_filtergraph(len(scene_paths), scene_durations)
+        assemble_command = AssembleReelCommand(
+            scene_paths=scene_paths,
+            output_path=no_text_output_path,
+            filtergraph=filtergraph,
+            fps=FPS,
+            codec=VIDEO_CODEC,
+            preset=PRESET,
+            crf=CRF,
+            pixel_format=PIXEL_FORMAT,
         )
-        subprocess.run(caption_command, check=True)
-        russian_caption_command = build_caption_command(
-            no_text_output_path, music_path, russian_output_path, RUSSIAN_CAPTIONS
-        )
-        subprocess.run(russian_caption_command, check=True)
+        subprocess.run(assemble_command.argv, check=True)
+
+        assembled_reel_duration = probe_duration(no_text_output_path)
         thumbnail_paths = generate_thumbnails()
-        prepend_thumbnail(
-            output_path,
-            thumbnail_paths["en"],
-            music_path,
-            MUSIC_VOLUME,
-            MUSIC_FADE_IN,
-            MUSIC_FADE_OUT,
+        final_filtergraph = build_final_reel_filtergraph(
+            assembled_reel_duration,
+            CAPTIONS,
         )
-        prepend_thumbnail(
-            russian_output_path,
-            thumbnail_paths["ru"],
-            music_path,
-            MUSIC_VOLUME,
-            MUSIC_FADE_IN,
-            MUSIC_FADE_OUT,
+        compose_command = ComposeFinalReelCommand(
+            thumbnail_path=thumbnail_paths["en"],
+            assembled_reel_path=no_text_output_path,
+            music_path=music_path,
+            output_path=output_path,
+            filtergraph=final_filtergraph,
+            fps=FPS,
+            thumbnail_duration=THUMBNAIL_DURATION,
+            codec=VIDEO_CODEC,
+            preset=PRESET,
+            crf=CRF,
+            pixel_format=PIXEL_FORMAT,
+            audio_codec=AUDIO_CODEC,
+            audio_bitrate=AUDIO_BITRATE,
         )
+        subprocess.run(compose_command.argv, check=True)
+
+        russian_final_filtergraph = build_final_reel_filtergraph(
+            assembled_reel_duration,
+            RUSSIAN_CAPTIONS,
+        )
+        russian_compose_command = ComposeFinalReelCommand(
+            thumbnail_path=thumbnail_paths["ru"],
+            assembled_reel_path=no_text_output_path,
+            music_path=music_path,
+            output_path=russian_output_path,
+            filtergraph=russian_final_filtergraph,
+            fps=FPS,
+            thumbnail_duration=THUMBNAIL_DURATION,
+            codec=VIDEO_CODEC,
+            preset=PRESET,
+            crf=CRF,
+            pixel_format=PIXEL_FORMAT,
+            audio_codec=AUDIO_CODEC,
+            audio_bitrate=AUDIO_BITRATE,
+        )
+        subprocess.run(russian_compose_command.argv, check=True)
     except FileNotFoundError as error:
         if error.filename in {"ffmpeg", "ffprobe"}:
             print(
