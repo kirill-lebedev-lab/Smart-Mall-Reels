@@ -8,6 +8,8 @@ from PIL import Image
 
 from ffmpeg.encode_video_command import EncodeVideoCommand
 from ffmpeg.ffmpeg_video_output import FfmpegVideoOutput
+from video.frame_settings import FrameSettings
+from video.video_settings import VideoSettings
 
 
 # Scene timing and output format.
@@ -105,16 +107,18 @@ def render_frames(source: Image.Image, total_frames: int):
 def render_video(input_path: Path, output_path: Path) -> None:
     total_frames = frame_count()
     source = Image.open(input_path).convert("RGB")
-    command = EncodeVideoCommand(
-        output_path=output_path,
-        width=OUTPUT_WIDTH,
-        height=OUTPUT_HEIGHT,
+    video_settings = VideoSettings(
+        frame=FrameSettings(width=OUTPUT_WIDTH, height=OUTPUT_HEIGHT),
         fps=FPS,
-        frame_count=total_frames,
         codec=VIDEO_CODEC,
         preset=PRESET,
         crf=CRF,
-        output_pixel_format=PIXEL_FORMAT,
+        pixel_format=PIXEL_FORMAT,
+    )
+    command = EncodeVideoCommand(
+        output_path=output_path,
+        frame_count=total_frames,
+        video_settings=video_settings,
     )
 
     with FfmpegVideoOutput(command) as output:

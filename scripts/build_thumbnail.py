@@ -8,6 +8,8 @@ from PIL import Image
 from ffmpeg.encode_video_command import EncodeVideoCommand
 from ffmpeg.ffmpeg_video_output import FfmpegVideoOutput
 from generate_thumbnails import generate_thumbnails
+from video.frame_settings import FrameSettings
+from video.video_settings import VideoSettings
 
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
@@ -54,16 +56,18 @@ def build_thumbnail_video(thumbnail_path: Path, output_path: Path) -> None:
 
     output_path.parent.mkdir(parents=True, exist_ok=True)
     total_frames = round(THUMBNAIL_DURATION * FPS)
-    command = EncodeVideoCommand(
-        output_path=output_path,
-        width=OUTPUT_WIDTH,
-        height=OUTPUT_HEIGHT,
+    video_settings = VideoSettings(
+        frame=FrameSettings(width=OUTPUT_WIDTH, height=OUTPUT_HEIGHT),
         fps=FPS,
-        frame_count=total_frames,
         codec=VIDEO_CODEC,
         preset=PRESET,
         crf=CRF,
-        output_pixel_format=PIXEL_FORMAT,
+        pixel_format=PIXEL_FORMAT,
+    )
+    command = EncodeVideoCommand(
+        output_path=output_path,
+        frame_count=total_frames,
+        video_settings=video_settings,
     )
 
     with FfmpegVideoOutput(command) as output:

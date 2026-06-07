@@ -1,20 +1,19 @@
 from dataclasses import dataclass
 from pathlib import Path
 
+from video.video_settings import VideoSettings
+
 
 @dataclass(frozen=True)
 class AssembleReelCommand:
     scene_paths: list[Path]
     output_path: Path
     filtergraph: str
-    fps: int
-    codec: str
-    preset: str
-    crf: str
-    pixel_format: str
+    video_settings: VideoSettings
 
     @property
     def argv(self) -> list[str]:
+        settings = self.video_settings
         command = ["ffmpeg", "-y"]
         for path in self.scene_paths:
             command.extend(["-i", str(path)])
@@ -26,15 +25,15 @@ class AssembleReelCommand:
                 "-map",
                 "[vout]",
                 "-r",
-                str(self.fps),
+                str(settings.fps),
                 "-c:v",
-                self.codec,
+                settings.codec,
                 "-preset",
-                self.preset,
+                settings.preset,
                 "-crf",
-                self.crf,
+                settings.crf,
                 "-pix_fmt",
-                self.pixel_format,
+                settings.pixel_format,
                 str(self.output_path),
             ]
         )

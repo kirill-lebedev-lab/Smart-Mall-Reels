@@ -6,6 +6,8 @@ from pathlib import Path
 from ffmpeg.assemble_reel_command import AssembleReelCommand
 from ffmpeg.compose_final_reel_command import ComposeFinalReelCommand
 from generate_thumbnails import generate_thumbnails
+from video.frame_settings import FrameSettings
+from video.video_settings import VideoSettings
 
 
 # Reel inputs and output.
@@ -290,6 +292,14 @@ def main() -> int:
         return 1
 
     output_path.parent.mkdir(parents=True, exist_ok=True)
+    video_settings = VideoSettings(
+        frame=FrameSettings(width=OUTPUT_WIDTH, height=OUTPUT_HEIGHT),
+        fps=FPS,
+        codec=VIDEO_CODEC,
+        preset=PRESET,
+        crf=CRF,
+        pixel_format=PIXEL_FORMAT,
+    )
 
     print("Running ffmpeg...")
     try:
@@ -299,11 +309,7 @@ def main() -> int:
             scene_paths=scene_paths,
             output_path=no_text_output_path,
             filtergraph=filtergraph,
-            fps=FPS,
-            codec=VIDEO_CODEC,
-            preset=PRESET,
-            crf=CRF,
-            pixel_format=PIXEL_FORMAT,
+            video_settings=video_settings,
         )
         subprocess.run(assemble_command.argv, check=True)
 
@@ -319,12 +325,8 @@ def main() -> int:
             music_path=music_path,
             output_path=output_path,
             filtergraph=final_filtergraph,
-            fps=FPS,
             thumbnail_duration=THUMBNAIL_DURATION,
-            codec=VIDEO_CODEC,
-            preset=PRESET,
-            crf=CRF,
-            pixel_format=PIXEL_FORMAT,
+            video_settings=video_settings,
             audio_codec=AUDIO_CODEC,
             audio_bitrate=AUDIO_BITRATE,
         )
@@ -340,12 +342,8 @@ def main() -> int:
             music_path=music_path,
             output_path=russian_output_path,
             filtergraph=russian_final_filtergraph,
-            fps=FPS,
             thumbnail_duration=THUMBNAIL_DURATION,
-            codec=VIDEO_CODEC,
-            preset=PRESET,
-            crf=CRF,
-            pixel_format=PIXEL_FORMAT,
+            video_settings=video_settings,
             audio_codec=AUDIO_CODEC,
             audio_bitrate=AUDIO_BITRATE,
         )
