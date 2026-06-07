@@ -6,6 +6,9 @@ from pathlib import Path
 
 from PIL import Image
 
+from ffmpeg.encode_video_command import EncodeVideoCommand
+from ffmpeg.ffmpeg_video_output import FfmpegVideoOutput
+
 
 # Scene timing and output format.
 DURATION = 5.5
@@ -66,34 +69,6 @@ def frame_count() -> int:
     return int(round(DURATION * FPS))
 
 
-def build_ffmpeg_command(output_path: Path) -> list[str]:
-    return [
-        "ffmpeg",
-        "-y",
-        "-f",
-        "rawvideo",
-        "-pix_fmt",
-        "rgb24",
-        "-s",
-        f"{OUTPUT_WIDTH}x{OUTPUT_HEIGHT}",
-        "-r",
-        str(FPS),
-        "-i",
-        "-",
-        "-frames:v",
-        str(frame_count()),
-        "-c:v",
-        VIDEO_CODEC,
-        "-preset",
-        PRESET,
-        "-crf",
-        CRF,
-        "-pix_fmt",
-        PIXEL_FORMAT,
-        str(output_path),
-    ]
-
-
 def render_frame(source: Image.Image, index: int, total_frames: int) -> Image.Image:
     """Render one undistorted 9:16 frame as the mall route activates."""
     progress = 0 if total_frames == 1 else index / (total_frames - 1)
@@ -122,25 +97,29 @@ def render_frame(source: Image.Image, index: int, total_frames: int) -> Image.Im
     )
 
 
-def write_video(input_path: Path, output_path: Path) -> None:
+def render_frames(source: Image.Image, total_frames: int):
+    for index in range(total_frames):
+        yield render_frame(source, index, total_frames)
+
+
+def render_video(input_path: Path, output_path: Path) -> None:
     total_frames = frame_count()
     source = Image.open(input_path).convert("RGB")
-    command = build_ffmpeg_command(output_path)
+    command = EncodeVideoCommand(
+        output_path=output_path,
+        width=OUTPUT_WIDTH,
+        height=OUTPUT_HEIGHT,
+        fps=FPS,
+        frame_count=total_frames,
+        codec=VIDEO_CODEC,
+        preset=PRESET,
+        crf=CRF,
+        output_pixel_format=PIXEL_FORMAT,
+    )
 
-    process = subprocess.Popen(command, stdin=subprocess.PIPE)
-    assert process.stdin is not None
-
-    try:
-        for index in range(total_frames):
-            frame = render_frame(source, index, total_frames)
-            process.stdin.write(frame.tobytes())
-        process.stdin.close()
-        return_code = process.wait()
-    except BrokenPipeError:
-        return_code = process.wait()
-
-    if return_code != 0:
-        raise subprocess.CalledProcessError(return_code, command)
+    with FfmpegVideoOutput(command) as output:
+        for frame in render_frames(source, total_frames):
+            output.write(frame)
 
 
 def parse_args() -> argparse.Namespace:
@@ -177,7 +156,7 @@ def main() -> int:
 
     print("Running ffmpeg...")
     try:
-        write_video(input_path, output_path)
+        render_video(input_path, output_path)
     except FileNotFoundError:
         print("ffmpeg was not found. Please install ffmpeg and try again.", file=sys.stderr)
         return 2
