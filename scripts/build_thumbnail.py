@@ -4,6 +4,10 @@ import sys
 import tempfile
 from pathlib import Path
 
+from PIL import Image
+
+from ffmpeg.encode_video_command import EncodeVideoCommand
+from ffmpeg.ffmpeg_video_output import FfmpegVideoOutput
 from generate_thumbnails import generate_thumbnails
 
 
@@ -41,38 +45,26 @@ def probe_duration(path: Path) -> float:
     return float(result.stdout.strip())
 
 
-def build_thumbnail_video_command(thumbnail_path: Path, output_path: Path) -> list[str]:
-    return [
-        "ffmpeg",
-        "-y",
-        "-loop",
-        "1",
-        "-t",
-        f"{THUMBNAIL_DURATION:.3f}",
-        "-i",
-        str(thumbnail_path),
-        "-vf",
-        (
-            f"fps={FPS},"
-            f"scale={OUTPUT_WIDTH}:{OUTPUT_HEIGHT}:force_original_aspect_ratio=increase,"
-            f"crop={OUTPUT_WIDTH}:{OUTPUT_HEIGHT},"
-            f"setsar=1,"
-            f"format={PIXEL_FORMAT}"
-        ),
-        "-r",
-        str(FPS),
-        "-frames:v",
-        str(round(THUMBNAIL_DURATION * FPS)),
-        "-c:v",
-        VIDEO_CODEC,
-        "-preset",
-        PRESET,
-        "-crf",
-        CRF,
-        "-pix_fmt",
-        PIXEL_FORMAT,
-        str(output_path),
-    ]
+def render_thumbnail_frames(thumbnail_path: Path, total_frames: int):
+    with Image.open(thumbnail_path) as source:
+        frame = source.convert("RGB")
+
+    if frame.size != (OUTPUT_WIDTH, OUTPUT_HEIGHT):
+        scale = max(OUTPUT_WIDTH / frame.width, OUTPUT_HEIGHT / frame.height)
+        scaled_width = round(frame.width * scale)
+        scaled_height = round(frame.height * scale)
+        frame = frame.resize(
+            (scaled_width, scaled_height),
+            Image.Resampling.LANCZOS,
+        )
+        left = (scaled_width - OUTPUT_WIDTH) // 2
+        top = (scaled_height - OUTPUT_HEIGHT) // 2
+        frame = frame.crop(
+            (left, top, left + OUTPUT_WIDTH, top + OUTPUT_HEIGHT)
+        )
+
+    for _ in range(total_frames):
+        yield frame
 
 
 def build_thumbnail_video(thumbnail_path: Path, output_path: Path) -> None:
@@ -80,7 +72,23 @@ def build_thumbnail_video(thumbnail_path: Path, output_path: Path) -> None:
         raise FileNotFoundError(f"Missing thumbnail file: {thumbnail_path}")
 
     output_path.parent.mkdir(parents=True, exist_ok=True)
-    subprocess.run(build_thumbnail_video_command(thumbnail_path, output_path), check=True)
+    total_frames = round(THUMBNAIL_DURATION * FPS)
+    command = EncodeVideoCommand(
+        output_path=output_path,
+        width=OUTPUT_WIDTH,
+        height=OUTPUT_HEIGHT,
+        fps=FPS,
+        frame_count=total_frames,
+        codec=VIDEO_CODEC,
+        preset=PRESET,
+        crf=CRF,
+        output_pixel_format=PIXEL_FORMAT,
+    )
+
+    with FfmpegVideoOutput(command) as output:
+        for frame in render_thumbnail_frames(thumbnail_path, total_frames):
+            output.write(frame)
+
     print(f"Thumbnail video created: {output_path.resolve()}")
 
 
