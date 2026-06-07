@@ -2,15 +2,15 @@
 import argparse
 import subprocess
 import sys
+from dataclasses import replace
 from pathlib import Path
-
-from PIL import Image
 
 from camera.camera_state import CameraState
 from camera.linear_camera_path import LinearCameraPath
 from ffmpeg.encode_video_command import EncodeVideoCommand
 from ffmpeg.ffmpeg_video_output import FfmpegVideoOutput
 from scene.scene import Scene
+from scene.scene_frame_renderer import SceneFrameRenderer
 from video.frame_settings import FrameSettings
 from video.video_settings import VideoSettings
 
@@ -47,51 +47,17 @@ SCENE = Scene(
 )
 
 
-def frame_count() -> int:
-    return int(round(SCENE.duration * SCENE.video_settings.fps))
-
-
-def render_frame(source: Image.Image, index: int, total_frames: int) -> Image.Image:
-    """Render one undistorted 9:16 frame from the horizontal source image."""
-    frame_settings = SCENE.video_settings.frame
-    camera = SCENE.camera_path.state_at(index, total_frames)
-
-    scaled_height = round(frame_settings.height * camera.zoom)
-    scaled_width = round(source.width * scaled_height / source.height)
-    scaled = source.resize((scaled_width, scaled_height), Image.Resampling.LANCZOS)
-
-    x = round(camera.x)
-    y = round((scaled_height - frame_settings.height) * camera.y_focus)
-    x = max(0, min(x, scaled_width - frame_settings.width))
-    y = max(0, min(y, scaled_height - frame_settings.height))
-
-    return scaled.crop(
-        (
-            x,
-            y,
-            x + frame_settings.width,
-            y + frame_settings.height,
-        )
-    )
-
-
-def render_frames(source: Image.Image, total_frames: int):
-    for index in range(total_frames):
-        yield render_frame(source, index, total_frames)
-
-
-def render_video(input_path: Path, output_path: Path) -> None:
-    total_frames = frame_count()
-    source = Image.open(input_path).convert("RGB")
+def render_video(scene: Scene, output_path: Path) -> None:
     command = EncodeVideoCommand(
         output_path=output_path,
-        frame_count=total_frames,
-        video_settings=SCENE.video_settings,
+        frame_count=scene.frame_count,
+        video_settings=scene.video_settings,
     )
 
-    with FfmpegVideoOutput(command) as output:
-        for frame in render_frames(source, total_frames):
-            output.write(frame)
+    with SceneFrameRenderer(scene) as renderer:
+        with FfmpegVideoOutput(command) as output:
+            for frame in renderer.frames():
+                output.write(frame)
 
 
 def parse_args() -> argparse.Namespace:
@@ -128,7 +94,8 @@ def main() -> int:
 
     print("Running ffmpeg...")
     try:
-        render_video(input_path, output_path)
+        scene = replace(SCENE, source_path=input_path)
+        render_video(scene, output_path)
     except FileNotFoundError:
         print("ffmpeg was not found. Please install ffmpeg and try again.", file=sys.stderr)
         return 2

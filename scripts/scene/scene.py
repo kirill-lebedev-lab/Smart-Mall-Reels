@@ -11,3 +11,7 @@ class Scene:
     duration: float
     camera_path: LinearCameraPath
     video_settings: VideoSettings
+
+    @property
+    def frame_count(self) -> int:
+        return int(round(self.duration * self.video_settings.fps))
