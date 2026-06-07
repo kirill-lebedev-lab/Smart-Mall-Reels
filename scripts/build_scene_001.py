@@ -6,6 +6,8 @@ from pathlib import Path
 
 from PIL import Image
 
+from camera.camera_state import CameraState
+from camera.linear_camera_path import LinearCameraPath
 from ffmpeg.encode_video_command import EncodeVideoCommand
 from ffmpeg.ffmpeg_video_output import FfmpegVideoOutput
 from video.frame_settings import FrameSettings
@@ -28,6 +30,19 @@ VIEWPORT_X_START = 760
 VIEWPORT_X_END = 1100
 VIEWPORT_Y_FOCUS = 0.48
 
+CAMERA_PATH = LinearCameraPath(
+    start=CameraState(
+        zoom=ZOOM_START,
+        x=VIEWPORT_X_START,
+        y_focus=VIEWPORT_Y_FOCUS,
+    ),
+    end=CameraState(
+        zoom=ZOOM_END,
+        x=VIEWPORT_X_END,
+        y_focus=VIEWPORT_Y_FOCUS,
+    ),
+)
+
 # Encoding settings.
 VIDEO_CODEC = "libx264"
 PIXEL_FORMAT = "yuv420p"
@@ -39,27 +54,20 @@ DEFAULT_INPUT = PROJECT_ROOT / "images" / "navigation" / "001-001.png"
 DEFAULT_OUTPUT = PROJECT_ROOT / "scenes" / "scene_001.mp4"
 
 
-def smoothstep(progress: float) -> float:
-    """Return a gentle 0..1 easing value."""
-    return progress * progress * (3 - 2 * progress)
-
-
 def frame_count() -> int:
     return int(round(DURATION * FPS))
 
 
 def render_frame(source: Image.Image, index: int, total_frames: int) -> Image.Image:
     """Render one undistorted 9:16 frame from the horizontal source image."""
-    progress = 0 if total_frames == 1 else index / (total_frames - 1)
-    eased = smoothstep(progress)
-    zoom = ZOOM_START + (ZOOM_END - ZOOM_START) * eased
+    camera = CAMERA_PATH.state_at(index, total_frames)
 
-    scaled_height = round(BASE_SCALE_HEIGHT * zoom)
+    scaled_height = round(BASE_SCALE_HEIGHT * camera.zoom)
     scaled_width = round(source.width * scaled_height / source.height)
     scaled = source.resize((scaled_width, scaled_height), Image.Resampling.LANCZOS)
 
-    x = round(VIEWPORT_X_START + (VIEWPORT_X_END - VIEWPORT_X_START) * eased)
-    y = round((scaled_height - OUTPUT_HEIGHT) * VIEWPORT_Y_FOCUS)
+    x = round(camera.x)
+    y = round((scaled_height - OUTPUT_HEIGHT) * camera.y_focus)
     x = max(0, min(x, scaled_width - OUTPUT_WIDTH))
     y = max(0, min(y, scaled_height - OUTPUT_HEIGHT))
 
