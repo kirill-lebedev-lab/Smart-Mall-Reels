@@ -12,6 +12,7 @@ from ffmpeg.encode_video_command import EncodeVideoCommand
 from ffmpeg.ffmpeg_video_output import FfmpegVideoOutput
 from scene.scene import Scene
 from scene.scene_frame_renderer import SceneFrameRenderer
+from scene.shot import Shot
 from video.frame_settings import FrameSettings
 from video.video_settings import VideoSettings
 
@@ -21,35 +22,39 @@ DEFAULT_OUTPUT = PROJECT_ROOT / "scenes" / "scene_007.mp4"
 
 SCENE = Scene(
     source_path=PROJECT_ROOT / "images" / "navigation" / "001-012.png",
-    duration=5.5,
-    camera_path=BezierCameraPath(
-        control_points=[
-            CameraControlPoint(
-                progress=0.0,
-                camera=CameraState(
-                    zoom=1.02,
-                    x=735.0,
-                    y_focus=0.5,
-                ),
+    shots=[
+        Shot(
+            duration=5.5,
+            camera_path=BezierCameraPath(
+                control_points=[
+                    CameraControlPoint(
+                        progress=0.0,
+                        camera=CameraState(
+                            zoom=1.02,
+                            x=735.0,
+                            y_focus=0.5,
+                        ),
+                    ),
+                    CameraControlPoint(
+                        progress=0.55,
+                        camera=CameraState(
+                            zoom=1.02,
+                            x=945.0,
+                            y_focus=0.95,
+                        ),
+                    ),
+                    CameraControlPoint(
+                        progress=1.0,
+                        camera=CameraState(
+                            zoom=1.038,
+                            x=1280.0,
+                            y_focus=0.95,
+                        ),
+                    ),
+                ]
             ),
-            CameraControlPoint(
-                progress=0.55,
-                camera=CameraState(
-                    zoom=1.02,
-                    x=945.0,
-                    y_focus=0.95,
-                ),
-            ),
-            CameraControlPoint(
-                progress=1.0,
-                camera=CameraState(
-                    zoom=1.038,
-                    x=1280.0,
-                    y_focus=0.95,
-                ),
-            ),
-        ]
-    ),
+        ),
+    ],
     video_settings=VideoSettings(
         frame=FrameSettings(
             width=1080,

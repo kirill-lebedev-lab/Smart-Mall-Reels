@@ -11,6 +11,7 @@ from ffmpeg.encode_video_command import EncodeVideoCommand
 from ffmpeg.ffmpeg_video_output import FfmpegVideoOutput
 from scene.scene import Scene
 from scene.scene_frame_renderer import SceneFrameRenderer
+from scene.shot import Shot
 from video.frame_settings import FrameSettings
 from video.video_settings import VideoSettings
 
@@ -20,19 +21,23 @@ DEFAULT_OUTPUT = PROJECT_ROOT / "scenes" / "scene_004.mp4"
 
 SCENE = Scene(
     source_path=PROJECT_ROOT / "images" / "navigation" / "001-009.png",
-    duration=4.0,
-    camera_path=LinearCameraPath(
-        start=CameraState(
-            zoom=1.055,
-            x=730.0,
-            y_focus=0.5,
+    shots=[
+        Shot(
+            duration=4.0,
+            camera_path=LinearCameraPath(
+                start=CameraState(
+                    zoom=1.055,
+                    x=730.0,
+                    y_focus=0.5,
+                ),
+                end=CameraState(
+                    zoom=1.0,
+                    x=705.0,
+                    y_focus=0.5,
+                ),
+            ),
         ),
-        end=CameraState(
-            zoom=1.0,
-            x=705.0,
-            y_focus=0.5,
-        ),
-    ),
+    ],
     video_settings=VideoSettings(
         frame=FrameSettings(
             width=1080,

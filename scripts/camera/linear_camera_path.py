@@ -8,8 +8,8 @@ class LinearCameraPath:
     start: CameraState
     end: CameraState
 
-    def state_at(self, index: int, total_frames: int) -> CameraState:
-        progress = 0 if total_frames == 1 else index / (total_frames - 1)
+    def state_at_progress(self, progress: float) -> CameraState:
+        progress = max(0.0, min(progress, 1.0))
         eased = progress * progress * (3 - 2 * progress)
 
         return CameraState(

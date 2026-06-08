@@ -34,10 +34,13 @@ class SceneFrameRenderer:
         if self.source is None:
             raise RuntimeError("SceneFrameRenderer is not open.")
 
-        camera = self.scene.camera_path.state_at(
-            index,
-            self.scene.frame_count,
-        )
+        fps = self.scene.video_settings.fps
+        scene_time = index / fps
+        shot, local_time = self.scene.shot_at_time(scene_time)
+        progress = local_time / shot.duration
+        progress = max(0.0, min(progress, 1.0))
+        camera = shot.camera_path.state_at_progress(progress)
+
         return self.render_frame_from_camera(camera)
 
     def render_frame_from_camera(self, camera: CameraState) -> Image.Image:

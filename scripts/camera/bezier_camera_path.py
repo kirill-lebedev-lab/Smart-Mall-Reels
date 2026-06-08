@@ -35,8 +35,8 @@ class BezierCameraPath:
         if self.control_points[-1].progress != 1.0:
             raise ValueError("The last control point must have progress 1.0.")
 
-    def state_at(self, index: int, total_frames: int) -> CameraState:
-        progress = 0 if total_frames == 1 else index / (total_frames - 1)
+    def state_at_progress(self, progress: float) -> CameraState:
+        progress = max(0.0, min(progress, 1.0))
 
         if progress <= 0.0:
             return self.control_points[0].camera
