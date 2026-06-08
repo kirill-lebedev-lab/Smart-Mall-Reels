@@ -46,25 +46,27 @@ class SceneFrameRenderer:
 
         frame_settings = self.scene.video_settings.frame
 
-        scaled_height = round(frame_settings.height * camera.zoom)
-        scaled_width = round(
-            self.source.width * scaled_height / self.source.height
-        )
-        scaled = self.source.resize(
-            (scaled_width, scaled_height),
-            Image.Resampling.LANCZOS,
+        scale = (frame_settings.height / self.source.height) * camera.zoom
+
+        scaled_width = self.source.width * scale
+        scaled_height = self.source.height * scale
+
+        x = camera.x
+        y = (scaled_height - frame_settings.height) * camera.y_focus
+
+        x = max(0.0, min(x, scaled_width - frame_settings.width))
+        y = max(0.0, min(y, scaled_height - frame_settings.height))
+
+        crop_box = (
+            x / scale,
+            y / scale,
+            (x + frame_settings.width) / scale,
+            (y + frame_settings.height) / scale,
         )
 
-        x = round(camera.x)
-        y = round((scaled_height - frame_settings.height) * camera.y_focus)
-        x = max(0, min(x, scaled_width - frame_settings.width))
-        y = max(0, min(y, scaled_height - frame_settings.height))
-
-        return scaled.crop(
-            (
-                x,
-                y,
-                x + frame_settings.width,
-                y + frame_settings.height,
-            )
+        return self.source.transform(
+            (frame_settings.width, frame_settings.height),
+            Image.Transform.EXTENT,
+            crop_box,
+            Image.Resampling.BICUBIC,
         )
