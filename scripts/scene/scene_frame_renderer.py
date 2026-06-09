@@ -54,7 +54,7 @@ class SceneFrameRenderer:
         scaled_width = self.source.width * scale
         scaled_height = self.source.height * scale
 
-        x = camera.x
+        x = camera.x * scale
         y = (scaled_height - frame_settings.height) * camera.y_focus
 
         x = max(0.0, min(x, scaled_width - frame_settings.width))
