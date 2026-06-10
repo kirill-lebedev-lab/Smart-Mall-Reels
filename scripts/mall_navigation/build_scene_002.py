@@ -5,6 +5,11 @@ import sys
 from dataclasses import replace
 from pathlib import Path
 
+try:
+    from .paths import NAVIGATION_IMAGES_DIR, SCENES_DIR
+except ImportError:
+    from paths import NAVIGATION_IMAGES_DIR, SCENES_DIR
+
 from camera.camera_state import CameraState
 from camera.linear_camera_path import LinearCameraPath
 from ffmpeg.encode_video_command import EncodeVideoCommand
@@ -16,11 +21,10 @@ from video.frame_settings import FrameSettings
 from video.video_settings import VideoSettings
 
 
-PROJECT_ROOT = Path(__file__).resolve().parents[1]
-DEFAULT_OUTPUT = PROJECT_ROOT / "scenes" / "scene_002.mp4"
+DEFAULT_OUTPUT = SCENES_DIR / "scene_002.mp4"
 
 SCENE = Scene(
-    source_path=PROJECT_ROOT / "images" / "navigation" / "001-007.png",
+    source_path=NAVIGATION_IMAGES_DIR / "001-007.png",
     shots=[
         Shot(
             duration=4.0,

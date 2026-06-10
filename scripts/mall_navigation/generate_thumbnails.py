@@ -4,9 +4,13 @@ from pathlib import Path
 
 from PIL import Image, ImageDraw, ImageEnhance, ImageFilter, ImageFont, ImageOps
 
+try:
+    from .paths import NAVIGATION_IMAGES_DIR, OUTPUT_DIR
+except ImportError:
+    from paths import NAVIGATION_IMAGES_DIR, OUTPUT_DIR
 
-PROJECT_ROOT = Path(__file__).resolve().parents[1]
-SOURCE_IMAGE = PROJECT_ROOT / "images/navigation/001-008.png"
+
+SOURCE_IMAGE = NAVIGATION_IMAGES_DIR / "001-008.png"
 OUTPUT_WIDTH = 1080
 OUTPUT_HEIGHT = 1920
 TEXT_COLOR = "0xFFF6DC"
@@ -15,12 +19,12 @@ THUMBNAILS = {
     "en": {
         "title": "SMART MALL",
         "subtitle": "Space that responds to people",
-        "output": PROJECT_ROOT / "output/thumbnail_navigation_en.png",
+        "output": OUTPUT_DIR / "thumbnail_navigation_en.png",
     },
     "ru": {
         "title": "УМНЫЙ МОЛЛ",
         "subtitle": "Пространство, которое\nреагирует на людей",
-        "output": PROJECT_ROOT / "output/thumbnail_navigation_ru.png",
+        "output": OUTPUT_DIR / "thumbnail_navigation_ru.png",
     },
 }
 

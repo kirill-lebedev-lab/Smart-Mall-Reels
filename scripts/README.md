@@ -33,14 +33,15 @@ Scene
 
 ## Build Scripts
 
-- `build_scene_001.py` through `build_scene_009.py` render individual scenes.
-- `build_navigation_reel.py` assembles the navigation reel.
-- `build_thumbnail.py` builds the reel thumbnail.
-- `generate_thumbnails.py` generates source-image previews.
+- `mall_navigation/build_scene_001.py` through
+  `mall_navigation/build_scene_009.py` render individual scenes.
+- `mall_navigation/build_navigation_reel.py` assembles the navigation reel.
+- `mall_navigation/build_thumbnail.py` builds the reel thumbnail.
+- `mall_navigation/generate_thumbnails.py` generates source-image previews.
 
 Run scene scripts from the project root:
 
 ```bash
-python scripts/build_scene_001.py
-python scripts/build_scene_001.py --input custom.png --output custom.mp4
+python scripts/mall_navigation/build_scene_001.py
+python scripts/mall_navigation/build_scene_001.py --input custom.png --output custom.mp4
 ```

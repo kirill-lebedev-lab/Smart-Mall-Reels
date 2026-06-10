@@ -5,14 +5,21 @@ from pathlib import Path
 
 from PIL import Image
 
+try:
+    from .paths import OUTPUT_DIR
+except ImportError:
+    from paths import OUTPUT_DIR
+
 from ffmpeg.encode_video_command import EncodeVideoCommand
 from ffmpeg.ffmpeg_video_output import FfmpegVideoOutput
-from generate_thumbnails import generate_thumbnails
+try:
+    from .generate_thumbnails import generate_thumbnails
+except ImportError:
+    from generate_thumbnails import generate_thumbnails
 from video.frame_settings import FrameSettings
 from video.video_settings import VideoSettings
 
 
-PROJECT_ROOT = Path(__file__).resolve().parents[1]
 OUTPUT_WIDTH = 1080
 OUTPUT_HEIGHT = 1920
 FPS = 30
@@ -23,8 +30,8 @@ CRF = "18"
 PRESET = "slow"
 
 THUMBNAIL_VIDEOS = {
-    "en": PROJECT_ROOT / "output/thumbnail_navigation_en.mp4",
-    "ru": PROJECT_ROOT / "output/thumbnail_navigation_ru.mp4",
+    "en": OUTPUT_DIR / "thumbnail_navigation_en.mp4",
+    "ru": OUTPUT_DIR / "thumbnail_navigation_ru.mp4",
 }
 
 

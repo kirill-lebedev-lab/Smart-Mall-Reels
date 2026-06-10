@@ -5,8 +5,14 @@ import sys
 from dataclasses import replace
 from pathlib import Path
 
+try:
+    from .paths import NAVIGATION_IMAGES_DIR, SCENES_DIR
+except ImportError:
+    from paths import NAVIGATION_IMAGES_DIR, SCENES_DIR
+
+from camera.bezier_camera_path import BezierCameraPath
+from camera.camera_control_point import CameraControlPoint
 from camera.camera_state import CameraState
-from camera.linear_camera_path import LinearCameraPath
 from ffmpeg.encode_video_command import EncodeVideoCommand
 from ffmpeg.ffmpeg_video_output import FfmpegVideoOutput
 from scene.scene import Scene
@@ -16,25 +22,48 @@ from video.frame_settings import FrameSettings
 from video.video_settings import VideoSettings
 
 
-PROJECT_ROOT = Path(__file__).resolve().parents[1]
-DEFAULT_OUTPUT = PROJECT_ROOT / "scenes" / "scene_006.mp4"
+DEFAULT_OUTPUT = SCENES_DIR / "scene_009.mp4"
 
 SCENE = Scene(
-    source_path=PROJECT_ROOT / "images" / "navigation" / "001-011.png",
+    source_path=NAVIGATION_IMAGES_DIR / "001-014.png",
     shots=[
         Shot(
-            duration=4.0,
-            camera_path=LinearCameraPath(
-                start=CameraState(
-                    zoom=1.0,
-                    x=346,
-                    y_focus=0.5,
-                ),
-                end=CameraState(
-                    zoom=1.02,
-                    x=349,
-                    y_focus=0.5,
-                ),
+            duration=3.6,
+            camera_path=BezierCameraPath(
+                control_points=[
+                    CameraControlPoint(
+                        progress=0.0,
+                        camera=CameraState(
+                            zoom=1.0,
+                            x=477,
+                            y_focus=0.86,
+                        ),
+                    ),
+                    CameraControlPoint(
+                        progress=0.35,
+                        camera=CameraState(
+                            zoom=1.09,
+                            x=505,
+                            y_focus=0.5,
+                        ),
+                    ),
+                    CameraControlPoint(
+                        progress=0.7,
+                        camera=CameraState(
+                            zoom=1.17,
+                            x=570,
+                            y_focus=0.25,
+                        ),
+                    ),
+                    CameraControlPoint(
+                        progress=1.0,
+                        camera=CameraState(
+                            zoom=1.205,
+                            x=650,
+                            y_focus=0.2,
+                        ),
+                    ),
+                ]
             ),
         ),
     ],
@@ -67,7 +96,7 @@ def render_video(scene: Scene, output_path: Path) -> None:
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
-        description="Build cinematic scene 006 from a still mall image."
+        description="Build cinematic scene 009 from a still mall image."
     )
     parser.add_argument(
         "--input",

@@ -3,29 +3,37 @@ import subprocess
 import sys
 from pathlib import Path
 
+try:
+    from .paths import AUDIO_DIR, OUTPUT_DIR, SCENES_DIR
+except ImportError:
+    from paths import AUDIO_DIR, OUTPUT_DIR, SCENES_DIR
+
 from ffmpeg.assemble_reel_command import AssembleReelCommand
 from ffmpeg.compose_final_reel_command import ComposeFinalReelCommand
-from generate_thumbnails import generate_thumbnails
+try:
+    from .generate_thumbnails import generate_thumbnails
+except ImportError:
+    from generate_thumbnails import generate_thumbnails
 from video.frame_settings import FrameSettings
 from video.video_settings import VideoSettings
 
 
 # Reel inputs and output.
 SCENES = [
-    "scenes/scene_001.mp4",
-    "scenes/scene_002.mp4",
-    "scenes/scene_003.mp4",
-    "scenes/scene_004.mp4",
-    "scenes/scene_005.mp4",
-    "scenes/scene_006.mp4",
-    "scenes/scene_007.mp4",
-    "scenes/scene_008.mp4",
-    "scenes/scene_009.mp4",
+    SCENES_DIR / "scene_001.mp4",
+    SCENES_DIR / "scene_002.mp4",
+    SCENES_DIR / "scene_003.mp4",
+    SCENES_DIR / "scene_004.mp4",
+    SCENES_DIR / "scene_005.mp4",
+    SCENES_DIR / "scene_006.mp4",
+    SCENES_DIR / "scene_007.mp4",
+    SCENES_DIR / "scene_008.mp4",
+    SCENES_DIR / "scene_009.mp4",
 ]
-OUTPUT_PATH = "output/mall_navigation_reel_v01.mp4"
-RUSSIAN_OUTPUT_PATH = "output/mall_navigation_reel_rus_v01.mp4"
-NO_TEXT_OUTPUT_PATH = "output/mall_navigation_reel_v01_no_text.mp4"
-MUSIC_PATH = "audio/Glass Atrium Drift.mp3"
+OUTPUT_PATH = OUTPUT_DIR / "mall_navigation_reel_v01.mp4"
+RUSSIAN_OUTPUT_PATH = OUTPUT_DIR / "mall_navigation_reel_rus_v01.mp4"
+NO_TEXT_OUTPUT_PATH = OUTPUT_DIR / "mall_navigation_reel_v01_no_text.mp4"
+MUSIC_PATH = AUDIO_DIR / "Glass Atrium Drift.mp3"
 
 # Video and transition settings.
 FPS = 30
@@ -97,13 +105,6 @@ RUSSIAN_CAPTIONS = [
     {**CAPTIONS[3], "text": "Пространство, которое", "y": "h*0.455"},
     {**CAPTIONS[3], "text": "реагирует на людей", "y": "h*0.500"},
 ]
-
-PROJECT_ROOT = Path(__file__).resolve().parents[1]
-
-
-def project_path(path: str) -> Path:
-    return PROJECT_ROOT / path
-
 
 def check_input_scenes(scene_paths: list[Path]) -> None:
     missing = [path for path in scene_paths if not path.exists()]
@@ -278,11 +279,11 @@ def build_final_reel_filtergraph(
 
 
 def main() -> int:
-    scene_paths = [project_path(path) for path in SCENES]
-    output_path = project_path(OUTPUT_PATH)
-    russian_output_path = project_path(RUSSIAN_OUTPUT_PATH)
-    no_text_output_path = project_path(NO_TEXT_OUTPUT_PATH)
-    music_path = project_path(MUSIC_PATH)
+    scene_paths = SCENES
+    output_path = OUTPUT_PATH
+    russian_output_path = RUSSIAN_OUTPUT_PATH
+    no_text_output_path = NO_TEXT_OUTPUT_PATH
+    music_path = MUSIC_PATH
 
     try:
         check_input_scenes(scene_paths)

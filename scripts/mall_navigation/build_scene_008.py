@@ -5,6 +5,11 @@ import sys
 from dataclasses import replace
 from pathlib import Path
 
+try:
+    from .paths import NAVIGATION_IMAGES_DIR, SCENES_DIR
+except ImportError:
+    from paths import NAVIGATION_IMAGES_DIR, SCENES_DIR
+
 from camera.bezier_camera_path import BezierCameraPath
 from camera.camera_control_point import CameraControlPoint
 from camera.camera_state import CameraState
@@ -18,11 +23,10 @@ from video.frame_settings import FrameSettings
 from video.video_settings import VideoSettings
 
 
-PROJECT_ROOT = Path(__file__).resolve().parents[1]
-DEFAULT_OUTPUT = PROJECT_ROOT / "scenes" / "scene_008.mp4"
+DEFAULT_OUTPUT = SCENES_DIR / "scene_008.mp4"
 
 SCENE = Scene(
-    source_path=PROJECT_ROOT / "images" / "navigation" / "001-013.png",
+    source_path=NAVIGATION_IMAGES_DIR / "001-013.png",
     shots=[
         Shot(
             duration=2.3,
