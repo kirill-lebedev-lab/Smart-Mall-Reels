@@ -31,7 +31,7 @@ SCENE = Scene(
                         progress=0.0,
                         camera=CameraState(
                             zoom=1.02,
-                            x=348.6596200980392,
+                            x=349,
                             y_focus=0.5,
                         ),
                     ),
@@ -39,7 +39,7 @@ SCENE = Scene(
                         progress=0.55,
                         camera=CameraState(
                             zoom=1.02,
-                            x=448.27665441176475,
+                            x=448,
                             y_focus=0.95,
                         ),
                     ),
@@ -47,7 +47,7 @@ SCENE = Scene(
                         progress=1.0,
                         camera=CameraState(
                             zoom=1.038,
-                            x=596.660244059088,
+                            x=597,
                             y_focus=0.95,
                         ),
                     ),

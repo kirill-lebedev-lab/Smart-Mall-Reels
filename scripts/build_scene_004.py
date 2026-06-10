@@ -27,12 +27,12 @@ SCENE = Scene(
             camera_path=LinearCameraPath(
                 start=CameraState(
                     zoom=1.055,
-                    x=334.7995655608216,
+                    x=335,
                     y_focus=0.5,
                 ),
                 end=CameraState(
                     zoom=1.0,
-                    x=341.1171875,
+                    x=341,
                     y_focus=0.5,
                 ),
             ),
