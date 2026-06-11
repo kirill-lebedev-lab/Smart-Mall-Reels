@@ -18,6 +18,7 @@ SCENE_FILENAMES = [
     "scene_001.mp4",
     "scene_002.mp4",
     "scene_003.mp4",
+    "scene_004.mp4",
 ]
 DEFAULT_OUTPUT = OUTPUT_DIR / "visitor_attention_reel_v01_no_audio.mp4"
 
