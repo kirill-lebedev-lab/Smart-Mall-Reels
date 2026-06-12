@@ -34,16 +34,16 @@ SCENE = Scene(
                     CameraControlPoint(
                         progress=0.0,
                         camera=CameraState(
-                            zoom=1.04,
-                            x=660,
+                            zoom=1.0,
+                            x=800,
                             y_focus=0.5,
                         ),
                     ),
                     CameraControlPoint(
                         progress=0.65,
                         camera=CameraState(
-                            zoom=1.04,
-                            x=630,
+                            zoom=1.0,
+                            x=800,
                             y_focus=0.5,
                         ),
                     ),
