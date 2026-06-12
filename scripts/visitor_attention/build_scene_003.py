@@ -10,8 +10,9 @@ try:
 except ImportError:
     from paths import FITTING_ROOM_IMAGES_DIR, SCENES_DIR
 
+from camera.bezier_camera_path import BezierCameraPath
+from camera.camera_control_point import CameraControlPoint
 from camera.camera_state import CameraState
-from camera.linear_camera_path import LinearCameraPath
 from ffmpeg.encode_video_command import EncodeVideoCommand
 from ffmpeg.ffmpeg_video_output import FfmpegVideoOutput
 from scene.scene import Scene
@@ -27,18 +28,34 @@ SCENE = Scene(
     source_path=FITTING_ROOM_IMAGES_DIR / "003-002.png",
     shots=[
         Shot(
-            duration=1.7,
-            camera_path=LinearCameraPath(
-                start=CameraState(
-                    zoom=1.14,
-                    x=610,
-                    y_focus=0.5,
-                ),
-                end=CameraState(
-                    zoom=1.25,
-                    x=680,
-                    y_focus=0.5,
-                ),
+            duration=2.0,
+            camera_path=BezierCameraPath(
+                control_points=[
+                    CameraControlPoint(
+                        progress=0.0,
+                        camera=CameraState(
+                            zoom=1.08,
+                            x=760,
+                            y_focus=0.48,
+                        ),
+                    ),
+                    CameraControlPoint(
+                        progress=0.55,
+                        camera=CameraState(
+                            zoom=1.16,
+                            x=720,
+                            y_focus=0.5,
+                        ),
+                    ),
+                    CameraControlPoint(
+                        progress=1.0,
+                        camera=CameraState(
+                            zoom=1.4,
+                            x=690,
+                            y_focus=0.5,
+                        ),
+                    ),
+                ]
             ),
         ),
     ],
