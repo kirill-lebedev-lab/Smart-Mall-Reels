@@ -28,29 +28,29 @@ SCENE = Scene(
     source_path=FITTING_ROOM_IMAGES_DIR / "003-004.png",
     shots=[
         Shot(
-            duration=3.3,
+            duration=3.8,
             camera_path=BezierCameraPath(
                 control_points=[
                     CameraControlPoint(
                         progress=0.0,
                         camera=CameraState(
+                            zoom=1.04,
+                            x=660,
+                            y_focus=0.5,
+                        ),
+                    ),
+                    CameraControlPoint(
+                        progress=0.65,
+                        camera=CameraState(
+                            zoom=1.04,
+                            x=630,
+                            y_focus=0.5,
+                        ),
+                    ),
+                    CameraControlPoint(
+                        progress=0.84,
+                        camera=CameraState(
                             zoom=1.1,
-                            x=800,
-                            y_focus=0.5,
-                        ),
-                    ),
-                    CameraControlPoint(
-                        progress=0.3,
-                        camera=CameraState(
-                            zoom=1.08,
-                            x=760,
-                            y_focus=0.5,
-                        ),
-                    ),
-                    CameraControlPoint(
-                        progress=0.72,
-                        camera=CameraState(
-                            zoom=1.12,
                             x=500,
                             y_focus=0.5,
                         ),
