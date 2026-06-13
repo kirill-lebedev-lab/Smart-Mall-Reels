@@ -27,7 +27,7 @@ SCENE = Scene(
     source_path=FITTING_ROOM_IMAGES_DIR / "003-003.png",
     shots=[
         Shot(
-            duration=2.0,
+            duration=3.0,
             camera_path=LinearCameraPath(
                 start=CameraState(
                     zoom=1.1,
@@ -36,7 +36,7 @@ SCENE = Scene(
                 ),
                 end=CameraState(
                     zoom=1.0,
-                    x=530,
+                    x=470,
                     y_focus=0.5,
                 ),
             ),
