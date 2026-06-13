@@ -24,7 +24,7 @@ SCENE_FILENAMES = [
 
 DEFAULT_VIDEO = OUTPUT_DIR / "visitor_attention_reel_v01_no_audio.mp4"
 DEFAULT_VOICE_DIR = (
-    PROJECT_ROOT / "audio" / "voice" / "visitor_attention" / "Elixified"
+    PROJECT_ROOT / "audio" / "voice" / "visitor_attention" / "Josh"
 )
 DEFAULT_OUTPUT = OUTPUT_DIR / "visitor_attention_reel_en_v01.mp4"
 VISUAL_BUILDER = Path(__file__).with_name("build_visitor_attention_reel.py")
@@ -73,8 +73,8 @@ VOICE_SCRIPT = [
         scene="scene_001.mp4",
         text="Advertising became the background.",
         filename=(
-            "ElevenLabs_2026-06-13T10_03_32_"
-            "Elixified_pvc_sp96_s61_sb75_se0_b_m2.mp3"
+            "ElevenLabs_2026-06-13T10_49_09_"
+            "Josh - Teacher for Kids_pvc_sp100_s50_sb75_v3.mp3"
         ),
         start_offset=0.50,
     ),
@@ -82,8 +82,8 @@ VOICE_SCRIPT = [
         scene="scene_002.mp4",
         text="Pushy sales are annoying.",
         filename=(
-            "ElevenLabs_2026-06-13T10_04_03_"
-            "Elixified_pvc_sp96_s61_sb75_se0_b_m2.mp3"
+            "ElevenLabs_2026-06-13T10_49_58_"
+            "Josh - Teacher for Kids_pvc_sp100_s50_sb75_v3.mp3"
         ),
         start_offset=0.55,
     ),
@@ -91,8 +91,8 @@ VOICE_SCRIPT = [
         scene="scene_003.mp4",
         text="People are tired of pressure.",
         filename=(
-            "ElevenLabs_2026-06-13T10_04_48_"
-            "Elixified_pvc_sp96_s61_sb75_se0_b_m2.mp3"
+            "ElevenLabs_2026-06-13T10_50_33_"
+            "Josh - Teacher for Kids_pvc_sp100_s50_sb75_v3.mp3"
         ),
         start_offset=0.45,
     ),
@@ -100,8 +100,8 @@ VOICE_SCRIPT = [
         scene="scene_004.mp4",
         text="But they immediately notice themselves.",
         filename=(
-            "ElevenLabs_2026-06-13T10_05_22_"
-            "Elixified_pvc_sp96_s61_sb75_se0_b_m2.mp3"
+            "ElevenLabs_2026-06-13T10_51_11_"
+            "Josh - Teacher for Kids_pvc_sp100_s50_sb75_v3.mp3"
         ),
         start_offset=0.60,
     ),
@@ -109,8 +109,8 @@ VOICE_SCRIPT = [
         scene="scene_005.mp4",
         text="A smart mirror helps people see themselves differently.",
         filename=(
-            "ElevenLabs_2026-06-13T10_06_01_"
-            "Elixified_pvc_sp96_s61_sb75_se0_b_m2.mp3"
+            "ElevenLabs_2026-06-13T10_51_44_"
+            "Josh - Teacher for Kids_pvc_sp100_s50_sb75_v3.mp3"
         ),
         start_offset=0.90,
     ),
@@ -118,8 +118,8 @@ VOICE_SCRIPT = [
         scene="scene_005.mp4",
         text="Smart Mirror.",
         filename=(
-            "ElevenLabs_2026-06-13T10_06_23_"
-            "Elixified_pvc_sp96_s61_sb75_se0_b_m2.mp3"
+            "ElevenLabs_2026-06-13T10_52_14_"
+            "Josh - Teacher for Kids_pvc_sp100_s50_sb75_v3.mp3"
         ),
         start_offset=3.95,
     ),
@@ -127,8 +127,8 @@ VOICE_SCRIPT = [
         scene="scene_005.mp4",
         text="Smart Mall.",
         filename=(
-            "ElevenLabs_2026-06-13T10_06_46_"
-            "Elixified_pvc_sp96_s61_sb75_se0_b_m2.mp3"
+            "ElevenLabs_2026-06-13T10_52_38_"
+            "Josh - Teacher for Kids_pvc_sp100_s50_sb75_v3.mp3"
         ),
         start_offset=5.20,
     ),
@@ -136,8 +136,8 @@ VOICE_SCRIPT = [
         scene="scene_005.mp4",
         text="Designed around people.",
         filename=(
-            "ElevenLabs_2026-06-13T10_07_02_"
-            "Elixified_pvc_sp96_s61_sb75_se0_b_m2.mp3"
+            "ElevenLabs_2026-06-13T10_53_08_"
+            "Josh - Teacher for Kids_pvc_sp100_s50_sb75_v3.mp3"
         ),
         start_offset=6.35,
     ),
@@ -439,6 +439,13 @@ def main() -> int:
     output_path = resolve_project_path(args.output)
     scene_paths = [SCENES_DIR / filename for filename in SCENE_FILENAMES]
     voice_paths = [voice_dir / line.filename for line in VOICE_SCRIPT]
+
+    try:
+        displayed_voice_dir = voice_dir.relative_to(PROJECT_ROOT)
+    except ValueError:
+        displayed_voice_dir = voice_dir
+    print(f"Voice pack: {voice_dir.name}")
+    print(f"Voice directory: {displayed_voice_dir}")
 
     if not check_media_tools():
         return 2
