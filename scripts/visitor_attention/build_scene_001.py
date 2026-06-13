@@ -28,7 +28,7 @@ SCENE = Scene(
     source_path=FITTING_ROOM_IMAGES_DIR / "003-001-1.png",
     shots=[
         Shot(
-            duration=2.3,
+            duration=2.7,
             camera_path=BezierCameraPath(
                 control_points=[
                     CameraControlPoint(
@@ -50,8 +50,8 @@ SCENE = Scene(
                     CameraControlPoint(
                         progress=1.0,
                         camera=CameraState(
-                            zoom=1.0,
-                            x=405,
+                            zoom=0.96,
+                            x=365,
                             y_focus=0.5,
                         ),
                     ),

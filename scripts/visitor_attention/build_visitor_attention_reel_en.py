@@ -75,7 +75,7 @@ VOICE_SCRIPT = [
             "ElevenLabs_2026-06-13T10_49_09_"
             "Josh - Teacher for Kids_pvc_sp100_s50_sb75_v3.mp3"
         ),
-        start_offset=0.50,
+        start_offset=0.60,
     ),
     VoiceLine(
         scene="scene_002.mp4",
