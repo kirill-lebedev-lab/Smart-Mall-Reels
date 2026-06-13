@@ -9,6 +9,7 @@ except ImportError:
     from paths import AUDIO_DIR, OUTPUT_DIR, SCENES_DIR
 
 from ffmpeg.assemble_reel_command import AssembleReelCommand
+from ffmpeg.cinematic_captions import build_cinematic_caption_filter
 from ffmpeg.compose_final_reel_command import ComposeFinalReelCommand
 try:
     from .generate_thumbnails import generate_thumbnails
@@ -170,79 +171,16 @@ def build_filtergraph(scene_count: int, durations: list[float]) -> str:
     return ";".join(filters)
 
 
-def escape_drawtext_text(text: str) -> str:
-    return (
-        text.replace("\\", "\\\\")
-        .replace(":", "\\:")
-        .replace("'", "\\'")
-        .replace(",", "\\,")
-    )
-
-
-def escape_drawtext_expression(expression: str) -> str:
-    return expression.replace(",", "\\,")
-
-
-def caption_alpha_expression(start: float, end: float, fade_out: bool = True) -> str:
-    fade = CAPTION_FADE
-    if fade_out:
-        expression = (
-            f"if(lt(t,{start:.3f}),0,"
-            f"if(lt(t,{start + fade:.3f}),(t-{start:.3f})/{fade:.3f},"
-            f"if(lt(t,{end - fade:.3f}),0.92,"
-            f"if(lt(t,{end:.3f}),0.92*(1-(t-{end - fade:.3f})/{fade:.3f}),0))))"
-        )
-    else:
-        expression = (
-            f"if(lt(t,{start:.3f}),0,"
-            f"if(lt(t,{start + fade:.3f}),(t-{start:.3f})/{fade:.3f},0.92))"
-        )
-    return escape_drawtext_expression(expression)
-
-
 def build_caption_filter(captions: list[dict]) -> str:
-    if not captions:
-        return "[reel]null[captioned_reel]"
-
-    filters = ["[reel]null[cap0]"]
-
-    for index, caption in enumerate(captions):
-        input_label = f"cap{index}"
-        output_label = (
-            "captioned_reel"
-            if index == len(captions) - 1
-            else f"cap{index + 1}"
-        )
-        text = escape_drawtext_text(caption["text"])
-        alpha = caption_alpha_expression(
-            caption["start"], caption["end"], caption.get("fade_out", True)
-        )
-        border_width = caption.get("border_width", 1)
-        border_opacity = caption.get("border_opacity", 0.22)
-        shadow_opacity = caption.get("shadow_opacity", 0.42)
-        enable = escape_drawtext_expression(
-            f"between(t,{caption['start']:.3f},{caption['end']:.3f})"
-        )
-        filters.append(
-            f"[{input_label}]"
-            f"drawtext="
-            f"font='{FONT_FAMILY}':"
-            f"text='{text}':"
-            f"fontsize={caption['font_size']}:"
-            f"fontcolor={TEXT_COLOR}:"
-            f"alpha='{alpha}':"
-            f"x={caption['x']}:"
-            f"y={caption['y']}:"
-            f"bordercolor={SHADOW_COLOR}@{border_opacity}:"
-            f"borderw={border_width}:"
-            f"shadowcolor={SHADOW_COLOR}@{shadow_opacity}:"
-            f"shadowx=0:"
-            f"shadowy=3:"
-            f"enable='{enable}'"
-            f"[{output_label}]"
-        )
-
-    return ";".join(filters)
+    return build_cinematic_caption_filter(
+        captions,
+        input_label="reel",
+        output_label="captioned_reel",
+        font_family=FONT_FAMILY,
+        text_color=TEXT_COLOR,
+        shadow_color=SHADOW_COLOR,
+        fade=CAPTION_FADE,
+    )
 
 
 def build_final_reel_filtergraph(
