@@ -6,22 +6,18 @@ from pathlib import Path
 
 try:
     from .paths import OUTPUT_DIR, PROJECT_ROOT, SCENES_DIR
+    from .timeline import SCENE_FILENAMES
 except ImportError:
     from paths import OUTPUT_DIR, PROJECT_ROOT, SCENES_DIR
+    from timeline import SCENE_FILENAMES
 
 from ffmpeg.assemble_reel_command import AssembleReelCommand
 from video.frame_settings import FrameSettings
 from video.video_settings import VideoSettings
 
 
-SCENE_FILENAMES = [
-    "scene_001.mp4",
-    "scene_002.mp4",
-    "scene_003.mp4",
-    "scene_004.mp4",
-    "scene_005.mp4",
-]
 DEFAULT_OUTPUT = OUTPUT_DIR / "visitor_attention_reel_v01_no_audio.mp4"
+THUMBNAIL_BUILDER = Path(__file__).with_name("build_scene_000_thumbnail.py")
 
 FPS = 30
 OUTPUT_WIDTH = 1080
@@ -85,6 +81,28 @@ def parse_args() -> argparse.Namespace:
     return parser.parse_args()
 
 
+def build_thumbnail_scene(output_path: Path) -> int:
+    command = [
+        sys.executable,
+        str(THUMBNAIL_BUILDER),
+        "--output",
+        str(output_path),
+    ]
+    print(f"Building thumbnail scene with {THUMBNAIL_BUILDER}...")
+    try:
+        result = subprocess.run(command)
+    except OSError as error:
+        print(f"Could not run the thumbnail scene builder: {error}", file=sys.stderr)
+        return 1
+    if result.returncode != 0:
+        print(
+            f"Thumbnail scene builder failed with exit code "
+            f"{result.returncode}.",
+            file=sys.stderr,
+        )
+    return result.returncode
+
+
 def main() -> int:
     args = parse_args()
     scenes_dir = resolve_project_path(args.scenes_dir)
@@ -92,6 +110,10 @@ def main() -> int:
     scene_paths = [scenes_dir / name for name in SCENE_FILENAMES]
 
     scenes_dir.mkdir(parents=True, exist_ok=True)
+
+    thumbnail_result = build_thumbnail_scene(scene_paths[0])
+    if thumbnail_result != 0:
+        return thumbnail_result
 
     missing = [path for path in scene_paths if not path.exists()]
     if missing:

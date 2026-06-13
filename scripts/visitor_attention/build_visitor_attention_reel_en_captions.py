@@ -9,9 +9,11 @@ from pathlib import Path
 
 try:
     from .paths import OUTPUT_DIR, PROJECT_ROOT, SCENES_DIR
+    from .timeline import SCENE_FILENAMES
     from .voice_script import VOICE_SCRIPT, VoiceLine
 except ImportError:
     from paths import OUTPUT_DIR, PROJECT_ROOT, SCENES_DIR
+    from timeline import SCENE_FILENAMES
     from voice_script import VOICE_SCRIPT, VoiceLine
 
 from ffmpeg.cinematic_captions import build_cinematic_caption_filter
@@ -185,7 +187,7 @@ def build_music_reel(input_path: Path) -> int:
 def schedule_lines(voice_dir: Path) -> list[ScheduledLine]:
     scene_starts = {}
     elapsed = 0.0
-    for scene_name in dict.fromkeys(line.scene for line in VOICE_SCRIPT):
+    for scene_name in SCENE_FILENAMES:
         scene_path = SCENES_DIR / scene_name
         scene_starts[scene_name] = elapsed
         elapsed += probe_duration(scene_path)
@@ -286,10 +288,9 @@ def main() -> int:
     if not check_media_tools():
         return 2
 
-    if not input_path.is_file():
-        build_result = build_music_reel(input_path)
-        if build_result != 0:
-            return build_result
+    build_result = build_music_reel(input_path)
+    if build_result != 0:
+        return build_result
 
     if not input_path.is_file():
         print(
@@ -300,7 +301,7 @@ def main() -> int:
 
     missing_scenes = [
         SCENES_DIR / scene
-        for scene in dict.fromkeys(line.scene for line in VOICE_SCRIPT)
+        for scene in SCENE_FILENAMES
         if not (SCENES_DIR / scene).is_file()
     ]
     missing_voice = [

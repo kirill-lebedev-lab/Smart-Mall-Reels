@@ -10,19 +10,13 @@ from typing import Dict, List
 
 try:
     from .paths import OUTPUT_DIR, PROJECT_ROOT, SCENES_DIR
+    from .timeline import SCENE_FILENAMES
     from .voice_script import VOICE_SCRIPT, VoiceLine
 except ImportError:
     from paths import OUTPUT_DIR, PROJECT_ROOT, SCENES_DIR
+    from timeline import SCENE_FILENAMES
     from voice_script import VOICE_SCRIPT, VoiceLine
 
-
-SCENE_FILENAMES = [
-    "scene_001.mp4",
-    "scene_002.mp4",
-    "scene_003.mp4",
-    "scene_004.mp4",
-    "scene_005.mp4",
-]
 
 DEFAULT_VIDEO = OUTPUT_DIR / "visitor_attention_reel_v01_no_audio.mp4"
 DEFAULT_VOICE_DIR = (
@@ -330,13 +324,6 @@ def main() -> int:
     if not check_media_tools():
         return 2
 
-    missing_scenes = [path for path in scene_paths if not path.is_file()]
-    if missing_scenes:
-        print("Missing input scene file(s):", file=sys.stderr)
-        for path in missing_scenes:
-            print(f"- {path}", file=sys.stderr)
-        return 1
-
     missing_voice = [path for path in voice_paths if not path.is_file()]
     if missing_voice:
         print("Missing voice clip file(s):", file=sys.stderr)
@@ -347,6 +334,13 @@ def main() -> int:
     visual_result = build_silent_reel()
     if visual_result != 0:
         return visual_result
+
+    missing_scenes = [path for path in scene_paths if not path.is_file()]
+    if missing_scenes:
+        print("Missing input scene file(s):", file=sys.stderr)
+        for path in missing_scenes:
+            print(f"- {path}", file=sys.stderr)
+        return 1
 
     if not video_path.is_file():
         print(
