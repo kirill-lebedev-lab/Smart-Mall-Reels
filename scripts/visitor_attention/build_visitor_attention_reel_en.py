@@ -20,7 +20,7 @@ except ImportError:
 
 DEFAULT_VIDEO = OUTPUT_DIR / "visitor_attention_reel_v01_no_audio.mp4"
 DEFAULT_VOICE_DIR = (
-    PROJECT_ROOT / "audio" / "voice" / "visitor_attention" / "Josh"
+    PROJECT_ROOT / "audio" / "voice" / "visitor_attention" / "George"
 )
 DEFAULT_OUTPUT = OUTPUT_DIR / "visitor_attention_reel_en_v01.mp4"
 VISUAL_BUILDER = Path(__file__).with_name("build_visitor_attention_reel.py")

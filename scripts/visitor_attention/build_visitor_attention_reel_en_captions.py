@@ -24,7 +24,7 @@ DEFAULT_OUTPUT = (
     OUTPUT_DIR / "visitor_attention_reel_en_music_captions_v01.mp4"
 )
 DEFAULT_VOICE_DIR = (
-    PROJECT_ROOT / "audio" / "voice" / "visitor_attention" / "Josh"
+    PROJECT_ROOT / "audio" / "voice" / "visitor_attention" / "George"
 )
 MUSIC_REEL_BUILDER = Path(__file__).with_name(
     "build_visitor_attention_reel_en_with_music.py"

@@ -16,8 +16,8 @@ VOICE_SCRIPT = [
         scene="scene_001.mp4",
         text="Advertising became the background.",
         filename=(
-            "ElevenLabs_2026-06-13T10_49_09_"
-            "Josh - Teacher for Kids_pvc_sp100_s50_sb75_v3.mp3"
+            "ElevenLabs_2026-06-13T20_12_45_"
+            "George Daigle - Charismatic and Crisp_pvc_sp86_s29_sb75_v3.mp3"
         ),
         start_offset=0.60,
     ),
@@ -25,8 +25,8 @@ VOICE_SCRIPT = [
         scene="scene_002.mp4",
         text="Pushy sales are annoying.",
         filename=(
-            "ElevenLabs_2026-06-13T10_49_58_"
-            "Josh - Teacher for Kids_pvc_sp100_s50_sb75_v3.mp3"
+            "ElevenLabs_2026-06-13T20_33_50_"
+            "George Daigle - Charismatic and Crisp_pvc_sp86_s29_sb75_v3.mp3"
         ),
         start_offset=0.55,
     ),
@@ -34,8 +34,8 @@ VOICE_SCRIPT = [
         scene="scene_003.mp4",
         text="People are tired of pressure.",
         filename=(
-            "ElevenLabs_2026-06-13T10_50_33_"
-            "Josh - Teacher for Kids_pvc_sp100_s50_sb75_v3.mp3"
+            "ElevenLabs_2026-06-13T20_28_18_"
+            "George Daigle - Charismatic and Crisp_pvc_sp86_s29_sb75_v3.mp3"
         ),
         start_offset=0.45,
     ),
@@ -43,8 +43,8 @@ VOICE_SCRIPT = [
         scene="scene_004.mp4",
         text="But they immediately notice themselves.",
         filename=(
-            "ElevenLabs_2026-06-13T10_51_11_"
-            "Josh - Teacher for Kids_pvc_sp100_s50_sb75_v3.mp3"
+            "ElevenLabs_2026-06-13T20_16_49_"
+            "George Daigle - Charismatic and Crisp_pvc_sp86_s29_sb75_v3.mp3"
         ),
         start_offset=0.80,
     ),
@@ -52,8 +52,8 @@ VOICE_SCRIPT = [
         scene="scene_005.mp4",
         text="Smart Mirror.",
         filename=(
-            "ElevenLabs_2026-06-13T10_52_14_"
-            "Josh - Teacher for Kids_pvc_sp100_s50_sb75_v3.mp3"
+            "ElevenLabs_2026-06-13T20_17_38_"
+            "George Daigle - Charismatic and Crisp_pvc_sp86_s29_sb75_v3.mp3"
         ),
         start_offset=0.90,
     ),
@@ -61,8 +61,8 @@ VOICE_SCRIPT = [
         scene="scene_005.mp4",
         text="Smart Mall.",
         filename=(
-            "ElevenLabs_2026-06-13T10_52_38_"
-            "Josh - Teacher for Kids_pvc_sp100_s50_sb75_v3.mp3"
+            "ElevenLabs_2026-06-13T20_18_05_"
+            "George Daigle - Charismatic and Crisp_pvc_sp86_s29_sb75_v3.mp3"
         ),
         start_offset=2.05,
     ),
@@ -70,8 +70,8 @@ VOICE_SCRIPT = [
         scene="scene_005.mp4",
         text="Designed around people.",
         filename=(
-            "ElevenLabs_2026-06-13T10_53_08_"
-            "Josh - Teacher for Kids_pvc_sp100_s50_sb75_v3.mp3"
+            "ElevenLabs_2026-06-13T20_18_48_"
+            "George Daigle - Charismatic and Crisp_pvc_sp86_s29_sb75_v3.mp3"
         ),
         start_offset=3.15,
     ),

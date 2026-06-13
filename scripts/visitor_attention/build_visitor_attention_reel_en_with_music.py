@@ -49,7 +49,7 @@ def non_negative_volume(value: str) -> float:
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
         description=(
-            "Build the English Visitor Attention reel with Josh voiceover "
+            "Build the English Visitor Attention reel with George voiceover "
             "and quiet background music."
         )
     )
