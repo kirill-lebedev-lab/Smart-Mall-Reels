@@ -10,8 +10,9 @@ try:
 except ImportError:
     from paths import FITTING_ROOM_IMAGES_DIR, SCENES_DIR
 
+from camera.bezier_camera_path import BezierCameraPath
+from camera.camera_control_point import CameraControlPoint
 from camera.camera_state import CameraState
-from camera.linear_camera_path import LinearCameraPath
 from ffmpeg.encode_video_command import EncodeVideoCommand
 from ffmpeg.ffmpeg_video_output import FfmpegVideoOutput
 from scene.scene import Scene
@@ -28,17 +29,41 @@ SCENE = Scene(
     shots=[
         Shot(
             duration=4.2,
-            camera_path=LinearCameraPath(
-                start=CameraState(
-                    zoom=1.1,
-                    x=650,
-                    y_focus=0.45,
-                ),
-                end=CameraState(
-                    zoom=1.0,
-                    x=470,
-                    y_focus=0.5,
-                ),
+            camera_path=BezierCameraPath(
+                control_points=[
+                    CameraControlPoint(
+                        progress=0.0,
+                        camera=CameraState(
+                            zoom=1.1,
+                            x=650,
+                            y_focus=0.45,
+                        ),
+                    ),
+                    CameraControlPoint(
+                        progress=0.22,
+                        camera=CameraState(
+                            zoom=1.02,
+                            x=500,
+                            y_focus=0.49,
+                        ),
+                    ),
+                    CameraControlPoint(
+                        progress=0.48,
+                        camera=CameraState(
+                            zoom=1.0,
+                            x=470,
+                            y_focus=0.5,
+                        ),
+                    ),
+                    CameraControlPoint(
+                        progress=1.0,
+                        camera=CameraState(
+                            zoom=1.0,
+                            x=470,
+                            y_focus=0.5,
+                        ),
+                    ),
+                ]
             ),
         ),
     ],
