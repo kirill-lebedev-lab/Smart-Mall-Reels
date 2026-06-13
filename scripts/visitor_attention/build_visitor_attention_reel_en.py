@@ -32,7 +32,6 @@ VISUAL_BUILDER = Path(__file__).with_name("build_visitor_attention_reel.py")
 AUDIO_SAMPLE_RATE = 48000
 AUDIO_BITRATE = "192k"
 TIMING_TOLERANCE = 0.001
-FINAL_FRAME_PADDING = 0.20
 
 
 @dataclass(frozen=True)
@@ -103,16 +102,7 @@ VOICE_SCRIPT = [
             "ElevenLabs_2026-06-13T10_51_11_"
             "Josh - Teacher for Kids_pvc_sp100_s50_sb75_v3.mp3"
         ),
-        start_offset=0.60,
-    ),
-    VoiceLine(
-        scene="scene_005.mp4",
-        text="A smart mirror helps people see themselves differently.",
-        filename=(
-            "ElevenLabs_2026-06-13T10_51_44_"
-            "Josh - Teacher for Kids_pvc_sp100_s50_sb75_v3.mp3"
-        ),
-        start_offset=0.90,
+        start_offset=1.10,
     ),
     VoiceLine(
         scene="scene_005.mp4",
@@ -121,7 +111,7 @@ VOICE_SCRIPT = [
             "ElevenLabs_2026-06-13T10_52_14_"
             "Josh - Teacher for Kids_pvc_sp100_s50_sb75_v3.mp3"
         ),
-        start_offset=3.95,
+        start_offset=0.90,
     ),
     VoiceLine(
         scene="scene_005.mp4",
@@ -130,7 +120,7 @@ VOICE_SCRIPT = [
             "ElevenLabs_2026-06-13T10_52_38_"
             "Josh - Teacher for Kids_pvc_sp100_s50_sb75_v3.mp3"
         ),
-        start_offset=5.20,
+        start_offset=2.05,
     ),
     VoiceLine(
         scene="scene_005.mp4",
@@ -139,7 +129,7 @@ VOICE_SCRIPT = [
             "ElevenLabs_2026-06-13T10_53_08_"
             "Josh - Teacher for Kids_pvc_sp100_s50_sb75_v3.mp3"
         ),
-        start_offset=6.35,
+        start_offset=3.15,
     ),
 ]
 
@@ -164,7 +154,7 @@ def parse_args() -> argparse.Namespace:
         "--voice-dir",
         type=Path,
         default=DEFAULT_VOICE_DIR,
-        help="Directory containing the eight English voice clips.",
+        help="Directory containing the seven English voice clips.",
     )
     parser.add_argument(
         "--output",
@@ -288,21 +278,16 @@ def collect_warnings(
 
     for item in scheduled:
         scene = scene_timings[item.line.scene]
-        scene_end = (
-            output_duration
-            if item.line.scene == SCENE_FILENAMES[-1]
-            else scene.end
-        )
         actual_offset = item.absolute_start - scene.start
         if actual_offset + TIMING_TOLERANCE < item.line.start_offset:
             warnings.append(
                 f'"{item.line.text}" starts at offset {actual_offset:.3f}s, '
                 f"before its semantic offset {item.line.start_offset:.3f}s."
             )
-        if item.end > scene_end + TIMING_TOLERANCE:
+        if item.end > scene.end + TIMING_TOLERANCE:
             warnings.append(
                 f'"{item.line.text}" ends at {item.end:.3f}s and does not fit '
-                f"within {scene.filename}, which ends at {scene_end:.3f}s."
+                f"within {scene.filename}, which ends at {scene.end:.3f}s."
             )
 
     for current, following in zip(scheduled, scheduled[1:]):
@@ -379,36 +364,6 @@ def render_voice_timeline(
     subprocess.run(command, check=True)
 
 
-def extend_final_frame(
-    video_path: Path,
-    extension_duration: float,
-    extended_video_path: Path,
-) -> None:
-    command = [
-        "ffmpeg",
-        "-y",
-        "-i",
-        str(video_path),
-        "-vf",
-        f"tpad=stop_mode=clone:stop_duration={extension_duration:.6f}",
-        "-an",
-        "-c:v",
-        "libx264",
-        "-preset",
-        "slow",
-        "-crf",
-        "18",
-        "-pix_fmt",
-        "yuv420p",
-        str(extended_video_path),
-    ]
-    print(
-        f"Extending the final frame by {extension_duration:.3f}s "
-        "for the closing voiceover..."
-    )
-    subprocess.run(command, check=True)
-
-
 def mux_voiceover(video_path: Path, timeline_path: Path, output_path: Path) -> None:
     command = [
         "ffmpeg",
@@ -482,12 +437,7 @@ def main() -> int:
         scheduled = schedule_voice_lines(voice_dir, scene_timings)
         video_duration = probe_duration(video_path)
         print(f"\nMaster video duration: {video_duration:.3f}s")
-        voice_timeline_end = max(item.end for item in scheduled)
-        output_duration = max(
-            video_duration,
-            voice_timeline_end + FINAL_FRAME_PADDING,
-        )
-        extension_duration = output_duration - video_duration
+        output_duration = video_duration
         print(f"English reel duration: {output_duration:.3f}s")
 
         warnings = collect_warnings(scheduled, scene_timings, output_duration)
@@ -500,18 +450,8 @@ def main() -> int:
             prefix="visitor_attention_voiceover_"
         ) as temp_dir:
             timeline_path = Path(temp_dir) / "voiceover_timeline.m4a"
-            extended_video_path = Path(temp_dir) / "extended_video.mp4"
             render_voice_timeline(scheduled, output_duration, timeline_path)
-            if extension_duration > TIMING_TOLERANCE:
-                extend_final_frame(
-                    video_path,
-                    extension_duration,
-                    extended_video_path,
-                )
-                mux_video_path = extended_video_path
-            else:
-                mux_video_path = video_path
-            mux_voiceover(mux_video_path, timeline_path, output_path)
+            mux_voiceover(video_path, timeline_path, output_path)
     except subprocess.CalledProcessError as error:
         print(
             f"Media command failed with exit code {error.returncode}.",
